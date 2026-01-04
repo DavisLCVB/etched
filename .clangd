@@ -1,0 +1,23 @@
+CompileFlags:
+  CompilationDatabase: build/Debug
+
+  Add:
+    - -Wall
+    - -Wextra
+    - -std=c++20
+
+InlayHints:
+  Enabled: Yes
+  ParameterNames: Yes
+  DeducedTypes: Yes
+  Designators: Yes
+
+Index:
+  Background: Build
+  StandardLibrary: Yes
+
+Completion:
+  AllScopes: Yes
+
+Hover:
+  ShowAKA: Yes
