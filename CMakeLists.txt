@@ -15,7 +15,7 @@ target_include_directories(${LIB_NAME} INTERFACE
 )
 
 option(ETCHED_BUILD_TESTS "Build etched tests" OFF)
-option(ETCHED_BUILD_EXAMPLES "Build etched examples" ON)
+option(ETCHED_BUILD_EXAMPLES "Build etched examples" OFF)
 
 if(ETCHED_BUILD_TESTS)
   enable_testing()
