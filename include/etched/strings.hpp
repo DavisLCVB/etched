@@ -31,7 +31,7 @@ struct String {
     if constexpr (N != M) {
       return false;
     }
-    return data == other.data;
+    return view() == other.view();
   }
 
   constexpr auto operator==(std::string_view other) const -> bool {
@@ -53,11 +53,11 @@ String(const char (&)[N]) -> String<N>;  // NOLINT
 template <String S>
 consteval auto trim() {
   constexpr auto sv = S.view();
-  constexpr auto first = sv.find_first_not_of(' \t\n\r');
-  if (first == std::string_view::npos) {
+  constexpr auto first = sv.find_first_not_of(" \t\n\r");
+  if constexpr (first == std::string_view::npos) {
     return String<1>{""};
   }
-  constexpr auto last = sv.find_last_not_of(' \t\n\r');
+  constexpr auto last = sv.find_last_not_of(" \t\n\r");
   constexpr auto trimmedSize = last - first + 1;
 
   String<trimmedSize + 1> result{};
