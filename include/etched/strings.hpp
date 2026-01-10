@@ -38,6 +38,10 @@ struct String {
     return view() == other;
   }
 
+  constexpr auto operator==(const char* other) const -> bool {
+    return view() == std::string_view{other};
+  }
+
   constexpr operator const char*() const { return data.data(); }
 };
 
