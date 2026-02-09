@@ -2,28 +2,53 @@
 #include <iostream>
 
 void showCredits() {
-  std::cout << "Created by: The Etched Team\n";
-  std::cout << "License: MIT\n";
+  std::cout << "Created by: DavisLCVB\n";
 }
 
 void showStats() {
   std::cout << "Statistics:\n";
-  std::cout << "  - Total users: 1337\n";
-  std::cout << "  - Uptime: 99.9%\n";
+  std::cout << "  - Size: 60K\n";
+  std::cout << "  - Time: 0.006s\n";
 }
 
-int main(int argc, const char* argv[]) {
+auto main(int argc, const char* argv[]) -> int {  // NOLINT
   using namespace etched;
 
-  auto parser = ArgumentParser(
-      optInt<"port">("-p", "--port", "Server port", 8080),
-      optCallback<"credits">("-c", "--credits", "Show credits", showCredits),
-      optCallback<"stats">("-s", "--stats", "Show statistics", showStats),
-      optHelp("-h", "--help"));
+  static constexpr int defaultPort = 8080;
+  constexpr std::string_view name = "Your name";
 
-  parser.parse(argc, argv);
+  auto parser = ArgumentParser(
+      "ExampleApp", "ExampleDescription",
+      optInt<"port">('p', "port", "Server port", some(defaultPort)),
+      optCallback<"credits">('c', "credits", "Show credits", showCredits),
+      optCallback<"stats">('s', "stats", "Show statistics", showStats),
+      // You can also use lambda functions for callbacks
+      optCallback<"hello">('H', "hello", "Say hello",
+                           []() -> void { std::cout << "Hello, world!\n"; }),
+      // You can capture variables in lambda callbacks (only if they are constexpr or known at compile time)
+      optCallback<"greet">(
+          'g', "greet", "Greet the user",
+          [name]() -> void { std::cout << "Hello, " << name << "!\n"; }),
+      // Callbacks can also signal the parser to exit immediately after execution by returning an Result<Output> with shouldExit = true
+      optCallback<"terminate">('x', "exit", "Exit the application immediately",
+                               []() -> Result<Output> {
+                                 std::cout << "Terminating application...\n";
+                                 return ok(Output{.success = true,
+                                                  .shouldExit = true});
+                               }),
+      optHelp('h', "--help"));
+
+  auto result = parser.parse(argc, argv);
+  // If a callback signals to exit, we can check the result and exit early.
+  if (result.isOk() && result.unwrap().shouldExit) {
+    return 0;
+  }
+
+  if (!result.isOk()) {
+    result.unwrapErr().print();
+    return 1;
+  }
 
   std::cout << "Application continues after callbacks...\n";
-
   return 0;
 }

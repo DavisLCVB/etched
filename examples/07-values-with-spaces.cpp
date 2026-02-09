@@ -1,23 +1,21 @@
 #include <etched/etched.hpp>
 #include <iostream>
 
-int main(int argc, const char* argv[]) {
+auto main(int argc, const char* argv[]) -> int {  // NOLINT
   using namespace etched;
 
-  auto parser = ArgumentParser(
-      optString<"path">("-p", "--path", "File path", "/tmp/default.txt"),
-      optString<"message">("-m", "--message", "User message", "Hello World"),
-      optString<"description">("-d", "--desc", "Description text"));
+  auto parser =
+      ArgumentParser("ExampleApp", "ExampleDescription",
+                     optString<"msg">('m', "message", "Message with spaces",
+                                      "No message provided"));
 
-  parser.parse(argc, argv);
+  auto result = parser.parse(argc, argv);
 
-  std::cout << "Values:\n";
-  std::cout << "  Path: " << parser.getOption<"path">().value.value() << "\n";
-  std::cout << "  Message: " << parser.getOption<"message">().value.value() << "\n";
-
-  if (parser.getOption<"description">().value.has_value()) {
-    std::cout << "  Description: " << parser.getOption<"description">().value.value() << "\n";
+  if (!result.isOk()) {
+    result.unwrapErr().print();
+    return 1;
   }
 
+  std::cout << "Message: \"" << parser.get<"msg">().value() << "\"\n";
   return 0;
 }

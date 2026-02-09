@@ -1,21 +1,26 @@
 #include <etched/etched.hpp>
 #include <iostream>
 
-int main(int argc, const char* argv[]) {
+auto main(int argc, const char* argv[]) -> int {  // NOLINT
   using namespace etched;
 
+  static constexpr int defaultPort = 8080;
+
   auto parser = ArgumentParser(
-      optInt<"port">("-p", "--port", "Server port", 8080),
-      optString<"host">("-h", "--host", "Server host", "localhost"));
+      "ExampleApp", "ExampleDescription",
+      optInt<"port">('p', "port", "Server port", some(defaultPort)),
+      optString<"host">(noShort, "host", "Server host", "localhost"),
+      optBool<"verbose">('v', "verbose", "Enable verbose output"));
 
-  parser.parse(argc, argv);
+  auto result = parser.parse(argc, argv);
 
-  auto port = parser.getOption<"port">();
-  auto host = parser.getOption<"host">();
+  if (!result.isOk()) {
+    result.unwrapErr().print();
+    std::cout << parser.help();
+    return 1;
+  }
 
-  std::cout << "Server configuration:\n";
-  std::cout << "  Host: " << host.value.value() << "\n";
-  std::cout << "  Port: " << port.value.value() << "\n";
-
+  std::cout << "Host: " << parser.get<"host">().value() << "\n";
+  std::cout << "Port: " << parser.get<"port">().value() << "\n";
   return 0;
 }

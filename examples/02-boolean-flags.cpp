@@ -1,24 +1,37 @@
 #include <etched/etched.hpp>
 #include <iostream>
 
-int main(int argc, const char* argv[]) {
+auto main(int argc, const char* argv[]) -> int {  // NOLINT
   using namespace etched;
 
   auto parser = ArgumentParser(
-      optBool<"verbose">("-v", "--verbose", "Enable verbose output"),
-      optBool<"debug">("-d", "--debug", "Enable debug mode"),
-      optBool<"quiet">("-q", "--quiet", "Suppress output"));
+      "ExampleApp", "ExampleDescription",
+      optBool<"verbose">('v', "verbose", "Enable verbose logging"),
+      optBool<"debug">('d', "debug", noDesc));
 
-  parser.parse(argc, argv);
+  auto result = parser.parse(argc, argv);
 
-  auto verbose = parser.getOption<"verbose">();
-  auto debug = parser.getOption<"debug">();
-  auto quiet = parser.getOption<"quiet">();
+  if (!result.isOk()) {
+    result.unwrapErr().print();
+    return 1;
+  }
 
-  std::cout << "Flags:\n";
-  std::cout << "  Verbose: " << (verbose.value.value_or(false) ? "ON" : "OFF") << "\n";
-  std::cout << "  Debug: " << (debug.value.value_or(false) ? "ON" : "OFF") << "\n";
-  std::cout << "  Quiet: " << (quiet.value.value_or(false) ? "ON" : "OFF") << "\n";
+  if (parser.get<"verbose">().valueOr(false)) {
+    std::cout << "Verbose mode enabled\n";
+  }
 
+  // You can also check for the presence of a flag using has<"tag">()
+  if (parser.has<"verbose">()) {
+    std::cout << "Verbose flag is present\n";
+  }
+
+  if (parser.get<"debug">().valueOr(false)) {
+    std::cout << "Debug mode enabled\n";
+  }
+
+  // You can also check for the presence of a flag using has<"tag">()
+  if (parser.has<"debug">()) {
+    std::cout << "Debug flag is present\n";
+  }
   return 0;
 }

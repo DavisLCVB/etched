@@ -1,18 +1,32 @@
 #include <etched/etched.hpp>
 #include <iostream>
 
-int main(int argc, const char* argv[]) {
+auto main(int argc, const char* argv[]) -> int {  // NOLINT
   using namespace etched;
 
-  auto parser = ArgumentParser(
-      optInt<"port">("-p", "--port", "Server port", 8080),
-      optString<"config">("-c", "--config", "Config file path"),
-      optBool<"verbose">("-v", "--verbose", "Verbose output"),
-      optHelp("-h", "--help"));
+  static constexpr int defaultPort = 8080;
 
-  parser.parse(argc, argv);
+  auto parser = ArgumentParser(
+      "ExampleApp", "ExampleDescription",
+      optInt<"port">('p', "port", "Server port", some(defaultPort)),
+      optString<"config">('c', "config", "Config file path"),
+      // You can put long names with or without dashes (Will be normalized to long names without dashes internally)
+      optBool<"verbose">('v', "--verbose", "Verbose output"),
+      // Yoy can define custom flags that trigger the help message
+      optHelp('h', "myHelp"));
+
+  auto result = parser.parse(argc, argv);
+  if (result.isOk() && result.unwrap().shouldExit) {
+    return 0;
+  }
+
+  if (!result.isOk()) {
+    result.unwrapErr().print();
+    // Help always is generated. optHelp is only for assing a flag to trigger it.
+    std::cout << parser.help() << "\n";
+    return 1;
+  }
 
   std::cout << "Program started successfully!\n";
-
   return 0;
 }

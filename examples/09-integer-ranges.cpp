@@ -1,30 +1,31 @@
+#include <cstdint>
 #include <etched/etched.hpp>
 #include <iostream>
 
-int main(int argc, const char* argv[]) {
+auto main(int argc, const char* argv[]) -> int {  // NOLINT
   using namespace etched;
 
+  static constexpr uint16_t defaultPort = 8080;
+
   auto parser = ArgumentParser(
-      optInt<"tiny", int8_t>("-t", "--tiny", "Tiny number (-128 to 127)", 0),
-      optInt<"small", int16_t>("-s", "--small", "Small number", 0),
-      optInt<"normal", int32_t>("-n", "--normal", "Normal number", 0),
-      optInt<"big", int64_t>("-b", "--big", "Big number", 0),
-      optInt<"ubyte", uint8_t>("-u", "--ubyte", "Unsigned byte (0-255)", 0));
+      "ExampleApp", "ExampleDescription",
+      // Etched provides variants of optInt that allow you to specify
+      // the size of the integer.
+      optInt<"port", uint16_t>('p', "port", "Server port", some(defaultPort)));
 
-  try {
-    parser.parse(argc, argv);
+  auto result = parser.parse(argc, argv);
 
-    std::cout << "Integer values:\n";
-    std::cout << "  int8_t:  " << static_cast<int>(parser.getOption<"tiny">().value.value()) << "\n";
-    std::cout << "  int16_t: " << parser.getOption<"small">().value.value() << "\n";
-    std::cout << "  int32_t: " << parser.getOption<"normal">().value.value() << "\n";
-    std::cout << "  int64_t: " << parser.getOption<"big">().value.value() << "\n";
-    std::cout << "  uint8_t: " << static_cast<unsigned>(parser.getOption<"ubyte">().value.value()) << "\n";
-
-  } catch (const std::out_of_range& e) {
-    std::cerr << "Error: " << e.what() << "\n";
-    std::cerr << "Make sure values are within the type's range!\n";
+  if (!result.isOk()) {
+    auto error = result.unwrapErr();
+    // The error message will indicate if the provided value is out of range.
+    std::cerr << "Error: " << error.message() << "\n";
     return 1;
+  }
+  if (parser.has<"port">()) {
+    std::cout << "Port provided: " << parser.get<"port">().value() << "\n";
+    std::cout << "Port is within range\n";
+  } else {
+    std::cout << "Port not provided, using default: " << defaultPort << "\n";
   }
 
   return 0;

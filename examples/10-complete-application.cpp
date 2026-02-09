@@ -2,47 +2,60 @@
 #include <iostream>
 
 void showLicense() {
-  std::cout << "MIT License - Copyright (c) 2024\n";
+  std::cout << "MIT License - Copyright (c) 2026\n";
 }
 
-int main(int argc, const char* argv[]) {
+auto main(int argc, const char* argv[]) -> int {  // NOLINT
   using namespace etched;
 
+  static constexpr int defaultPort = 8080;
+  static constexpr int defaultWorkers = 4;
+  static constexpr double defaultTimeout = 30.0;
+
   auto parser = ArgumentParser(
-      optString<"host">("-H", "--host", "Server hostname", "0.0.0.0"),
-      optInt<"port">("-p", "--port", "Server port", 8080),
-      optInt<"workers", uint16_t>("-w", "--workers", "Worker threads", 4),
-      optFloat<"timeout", double>("-t", "--timeout", "Request timeout (seconds)", 30.0),
-      optString<"config">("-c", "--config", "Config file path"),
-      optBool<"verbose">("-v", "--verbose", "Enable verbose logging"),
-      optBool<"debug">("-d", "--debug", "Enable debug mode"),
-      optCallback<"license">("-L", "--license", "Show license", showLicense),
-      optVersion("Server v1.0.0", "-V", "--version", "Show version"),
-      optHelp("-h", "--help"));
+      "ExampleApp", "ExampleDescription",
+      optString<"host">('H', "host", "Server hostname", "0.0.0.0"),
+      optInt<"port">('p', "port", "Server port", some(defaultPort)),
+      optInt<"workers", uint16_t>('w', "workers", "Worker threads",
+                                  some(static_cast<uint16_t>(defaultWorkers))),
+      optFloat<"timeout", double>('t', "timeout", "Request timeout (seconds)",
+                                  some(defaultTimeout)),
+      optString<"config">('c', "config", "Config file path",
+                          noDefault<std::string_view>),
+      optBool<"verbose">('v', "verbose", "Enable verbose logging"),
+      optBool<"debug">('d', "debug", noDesc),
+      optCallback<"license">('L', "license", "Show license", showLicense),
+      optVersion("Server v1.0.0", 'V', "version", "Show version"),
+      optHelp('h', "--help"));
 
-  try {
-    parser.parse(argc, argv);
+  auto result = parser.parse(argc, argv);
 
-    std::cout << "\n=== Server Configuration ===\n";
-    std::cout << "Host:    " << parser.getOption<"host">().value.value() << "\n";
-    std::cout << "Port:    " << parser.getOption<"port">().value.value() << "\n";
-    std::cout << "Workers: " << parser.getOption<"workers">().value.value() << "\n";
-    std::cout << "Timeout: " << parser.getOption<"timeout">().value.value() << "s\n";
+  if (result.isOk() && result.unwrap().shouldExit) {
+    return 0;
+  }
 
-    if (parser.getOption<"config">().value.has_value()) {
-      std::cout << "Config:  " << parser.getOption<"config">().value.value() << "\n";
-    }
-
-    std::cout << "\n=== Flags ===\n";
-    std::cout << "Verbose: " << (parser.getOption<"verbose">().value.value_or(false) ? "ON" : "OFF") << "\n";
-    std::cout << "Debug:   " << (parser.getOption<"debug">().value.value_or(false) ? "ON" : "OFF") << "\n";
-
-    std::cout << "\nServer starting...\n";
-
-  } catch (const std::exception& e) {
-    std::cerr << "Error: " << e.what() << "\n";
+  if (!result.isOk()) {
+    result.unwrapErr().print();
     return 1;
   }
+
+  std::cout << "\n=== Server Configuration ===\n";
+  std::cout << "Host:    " << parser.get<"host">().value() << "\n";
+  std::cout << "Port:    " << parser.get<"port">().value() << "\n";
+  std::cout << "Workers: " << parser.get<"workers">().value() << "\n";
+  std::cout << "Timeout: " << parser.get<"timeout">().value() << "s\n";
+
+  if (parser.get<"config">()) {
+    std::cout << "Config:  " << parser.get<"config">().value() << "\n";
+  }
+
+  std::cout << "\n=== Flags ===\n";
+  std::cout << "Verbose: "
+            << (parser.get<"verbose">().valueOr(false) ? "ON" : "OFF") << "\n";
+  std::cout << "Debug:   "
+            << (parser.get<"debug">().valueOr(false) ? "ON" : "OFF") << "\n";
+
+  std::cout << "\nServer starting...\n";
 
   return 0;
 }

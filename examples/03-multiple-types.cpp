@@ -1,22 +1,31 @@
 #include <etched/etched.hpp>
 #include <iostream>
 
-int main(int argc, const char* argv[]) {
+auto main(int argc, const char* argv[]) -> int {  // NOLINT
   using namespace etched;
 
+  static constexpr int defaultPort = 8080;
+  static constexpr double defaultTimeout = 30.0;
+
   auto parser = ArgumentParser(
-      optInt<"count", int32_t>("-c", "--count", "Item count", 10),
-      optFloat<"rate", double>("-r", "--rate", "Rate multiplier", 1.5),
-      optString<"name">("-n", "--name", "User name", "guest"),
-      optInt<"size", uint64_t>("-s", "--size", "File size in bytes", 1024));
+      "ExampleApp", "ExampleDescription",
+      optInt<"port">('p', "port", "Server port", some(defaultPort)),
+      // String options return std::string_view when accessed.
+      optString<"host">('H', "host", "Server host", "localhost"),
+      optFloat<"timeout">('t', noLong, "Connection timeout",
+                          some(defaultTimeout)),
+      optBool<"verbose">('v', "verbose", "Enable verbose logging"));
 
-  parser.parse(argc, argv);
+  auto result = parser.parse(argc, argv);
 
-  std::cout << "Configuration:\n";
-  std::cout << "  Count (int32): " << parser.getOption<"count">().value.value() << "\n";
-  std::cout << "  Rate (double): " << parser.getOption<"rate">().value.value() << "\n";
-  std::cout << "  Name (string): " << parser.getOption<"name">().value.value() << "\n";
-  std::cout << "  Size (uint64): " << parser.getOption<"size">().value.value() << "\n";
+  if (!result.isOk()) {
+    result.unwrapErr().print();
+    return 1;
+  }
 
+  std::cout << "Host:    " << parser.get<"host">().value() << "\n";
+  std::cout << "Port:    " << parser.get<"port">().value() << "\n";
+  std::cout << "Timeout: " << parser.get<"timeout">().value() << "s\n";
+  std::cout << "Verbose: " << (parser.has<"verbose">() ? "yes" : "no") << "\n";
   return 0;
 }
