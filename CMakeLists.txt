@@ -27,10 +27,6 @@ if(ETCHED_BUILD_EXAMPLES)
   add_subdirectory(examples)
 endif()
 
-if(ETCHED_BUILD_BENCHMARKS)
-  add_subdirectory(benchmarking)
-endif()
-
 include(CMakePackageConfigHelpers)
 
 install(TARGETS ${LIB_NAME}
@@ -48,7 +44,6 @@ install(EXPORT ${LIB_NAME}Targets
   NAMESPACE ${LIB_NAME}::
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${LIB_NAME}
 )
-
 configure_package_config_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/cmake/${LIB_NAME}Config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/${LIB_NAME}Config.cmake
