@@ -119,7 +119,7 @@ struct PerfectSymbolTable {
 
     auto collect =
         [&]<size_t... Is>(std::index_sequence<Is...>) -> auto {  // NOLINT
-      auto processOption = [&](auto i, const auto& opt) -> auto {
+      [[maybe_unused]] auto processOption = [&](auto i, const auto& opt) -> auto {
         using OptType = std::decay_t<decltype(opt)>;
         auto addKey = [&](std::string_view k, EntryType type) -> auto {
           if (keyCount < maxKeysLimit) {

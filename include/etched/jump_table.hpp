@@ -45,7 +45,7 @@ class DefaultJumpTable {
         }
       } else {
         using ValueType = typename ItemType::ValueType;
-        auto ntRes = l.nextToken(ParsingContext::WAINTING_FOR_VALUE);
+        auto ntRes = l.nextToken(ParsingContext::WAITING_FOR_VALUE);
         if (!ntRes.isOk()) {
           return err<Output>(std::move(ntRes.unwrapErr()));
         }

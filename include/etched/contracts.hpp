@@ -32,7 +32,7 @@ inline auto deserialize(std::string_view /*unused*/,
 }
 }  // namespace etched
 
-// CONCEPTS FOR OPTIONS CHECKIN
+// CONCEPTS FOR OPTIONS CHECKING
 
 namespace etched::detail {
 // Concept to check if a type is deserializable using the deserialize function.
@@ -137,7 +137,7 @@ enum class ParsingContext : uint8_t {
   // Default context, no special rules
   DEFAULT,
   // When the previous token was an option that can take value
-  WAINTING_FOR_VALUE
+  WAITING_FOR_VALUE
 };
 
 // CONCEPTS FOR PARSING COMPONENTS

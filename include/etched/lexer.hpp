@@ -53,7 +53,7 @@ class DefaultLexer {
     if (token == "--") {
       return handleSeparator(ctx);
     }
-    if (ctx == ParsingContext::WAINTING_FOR_VALUE && Config::prefferValues) {
+    if (ctx == ParsingContext::WAITING_FOR_VALUE && Config::prefferValues) {
       return handlePositional(token, ctx);
     }
     if (token.starts_with("--") && token.size() > 2) {
@@ -61,7 +61,7 @@ class DefaultLexer {
     }
     if (token.starts_with("-") && token.size() > 1) {
       if (std::isdigit(static_cast<unsigned char>(token[1])) != 0 &&
-          ctx == ParsingContext::WAINTING_FOR_VALUE) {
+          ctx == ParsingContext::WAITING_FOR_VALUE) {
         return handlePositional(token, ctx);
       }
       if (std::isdigit(static_cast<unsigned char>(token[1])) == 0 ||
@@ -88,7 +88,7 @@ class DefaultLexer {
       return ok(lastToken_);
     }
     if (remaining_.type == RemainingType::SHORT) {
-      if (ctx == ParsingContext::WAINTING_FOR_VALUE) {
+      if (ctx == ParsingContext::WAITING_FOR_VALUE) {
         auto value = remaining_.value;
         remaining_ = Remaining{};
         currentIndex_++;
@@ -131,7 +131,7 @@ class DefaultLexer {
     if (ctx == ParsingContext::DEFAULT) {
       return ok(lastToken_);
     }
-    if (ctx == ParsingContext::WAINTING_FOR_VALUE) {
+    if (ctx == ParsingContext::WAITING_FOR_VALUE) {
       if constexpr (!Config::prefferValues) {
         return err<Token>("Passing long option as value is not allowed");
       }
@@ -159,7 +159,7 @@ class DefaultLexer {
     if (ctx == ParsingContext::DEFAULT) {
       return ok(lastToken_);
     }
-    if (ctx == ParsingContext::WAINTING_FOR_VALUE) {
+    if (ctx == ParsingContext::WAITING_FOR_VALUE) {
       if constexpr (!Config::prefferValues) {
         return err<Token>("Passing short option as value is not allowed");
       }
