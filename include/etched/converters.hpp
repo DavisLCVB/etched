@@ -1,102 +1,85 @@
-#pragma once
-#include <concepts>
-#include <cstdint>
-#include <cstdlib>
-#include <limits>
-#include <stdexcept>
-#include <string_view>
-
 #ifndef ETCHED_CONVERTERS_HPP
 #define ETCHED_CONVERTERS_HPP
 
+#include <charconv>
+#include <concepts>
+#include <string>
+
+#include "types.hpp"
+
 namespace etched {
 
-// Forward declaration
-template <typename T>
-auto fromStr(const char* str) -> T;
+constexpr int32_t conversionBase = 10;
 
-namespace detail {
-
-template <typename T>
-concept SignedInteger = std::is_integral_v<T> && std::is_signed_v<T>;
-
-template <typename T>
-concept UnsignedInteger = std::is_integral_v<T> && std::is_unsigned_v<T>;
-
-template <typename T>
-concept Integer = SignedInteger<T> || UnsignedInteger<T>;
-
-template <SignedInteger T>
-constexpr auto fromStrSigInt(const char* str) -> T {
-  int64_t val = std::stoll(str);
-  T min = std::numeric_limits<T>::min();
-  T max = std::numeric_limits<T>::max();
-  if (val < static_cast<int64_t>(min) || val > static_cast<int64_t>(max)) {
-    throw std::out_of_range("Value out of range");
+// Integer deserialization
+template <std::integral T>
+  requires(!std::same_as<T, bool>)
+[[nodiscard]] auto deserialize(std::string_view str, [[maybe_unused]] T* dummy)
+    -> Result<T> {
+  T value;
+  auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), value,
+                                   conversionBase);
+  if (ec == std::errc::invalid_argument) {
+    return err<T>("Invalid argument for integer deserialization");
   }
-  return static_cast<T>(val);
+  if (ec == std::errc::result_out_of_range) {
+    return err<T>("Integer deserialization out of range");
+  }
+  if (ptr != str.data() + str.size()) {
+    return err<T>("Extra characters found after integer deserialization");
+  }
+  return ok(value);
 }
 
-template <UnsignedInteger T>
-constexpr auto fromStrUnsigInt(const char* str) -> T {
-  uint64_t val = std::stoull(str);
-  T max = std::numeric_limits<T>::max();
-  if (val > static_cast<uint64_t>(max)) {
-    throw std::out_of_range("Value out of range");
+// Boolean deserialization
+[[nodiscard]] inline auto deserialize(std::string_view str,
+                                      [[maybe_unused]] bool* dummy)
+    -> Result<bool> {
+  if (str == "true" || str == "1" || str == "ON") {
+    return ok(true);
   }
-  return static_cast<T>(val);
+  if (str == "false" || str == "0" || str == "OFF") {
+    return ok(false);
+  }
+  return err<bool>("Invalid argument for boolean deserialization");
 }
 
-}  // namespace detail
-
-// Integer specializations
-template <detail::Integer T>
-auto fromStr(const char* str) -> T {
-  if (!str) {
-    throw std::invalid_argument("Null pointer passed to fromStr");
+// Floating-point deserialization
+template <std::floating_point T>
+[[nodiscard]] auto deserialize(std::string_view str, [[maybe_unused]] T* dummy)
+    -> Result<T> {
+  T value;
+  auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), value);
+  if (ec == std::errc::invalid_argument) {
+    return err<T>("Invalid argument for floating-point deserialization");
   }
-  if constexpr (detail::SignedInteger<T>) {
-    return detail::fromStrSigInt<T>(str);
-  } else if constexpr (detail::UnsignedInteger<T>) {
-    return detail::fromStrUnsigInt<T>(str);
+  if (ec == std::errc::result_out_of_range) {
+    return err<T>("Floating-point deserialization out of range");
   }
+  if (ptr != str.data() + str.size()) {
+    return err<T>(
+        "Extra characters found after floating-point deserialization");
+  }
+  return ok(value);
 }
 
-// Floating point specializations
-template <>
-inline auto fromStr<double>(const char* str) -> double {
-  if (!str) {
-    throw std::invalid_argument("Null pointer passed to fromStr<double>");
+// String deserialization
+[[nodiscard]] inline auto deserialize(std::string_view str,
+                                      [[maybe_unused]] std::string* dummy)
+    -> Result<std::string> {
+  if (str.empty()) {
+    return err<std::string>("Cannot deserialize empty string");
   }
-  return std::stod(str);
+  return ok(std::string(str));
 }
 
-template <>
-inline auto fromStr<float>(const char* str) -> float {
-  if (!str) {
-    throw std::invalid_argument("Null pointer passed to fromStr<float>");
+[[nodiscard]] inline auto deserialize(std::string_view str,
+                                      [[maybe_unused]] std::string_view* dummy)
+    -> Result<std::string_view> {
+  if (str.empty()) {
+    return err<std::string_view>("Cannot deserialize empty string_view");
   }
-  return std::stof(str);
-}
-
-// String specializations
-template <>
-inline auto fromStr<const char*>(const char* str) -> const char* {
-  return str;
-}
-
-template <>
-inline auto fromStr<std::string_view>(const char* str) -> std::string_view {
-  return str;
-}
-
-// Character specialization
-template <>
-inline auto fromStr<char>(const char* str) -> char {
-  if (str == nullptr || str[0] == '\0' || str[1] != '\0') {
-    throw std::invalid_argument("Invalid char value");
-  }
-  return str[0];
+  return ok(str);
 }
 
 }  // namespace etched

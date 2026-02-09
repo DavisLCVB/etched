@@ -16,6 +16,7 @@ target_include_directories(${LIB_NAME} INTERFACE
 
 option(ETCHED_BUILD_TESTS "Build etched tests" OFF)
 option(ETCHED_BUILD_EXAMPLES "Build etched examples" OFF)
+option(ETCHED_BUILD_BENCHMARKS "Build etched benchmarks" OFF)
 
 if(ETCHED_BUILD_TESTS)
   enable_testing()
@@ -24,6 +25,10 @@ endif()
 
 if(ETCHED_BUILD_EXAMPLES)
   add_subdirectory(examples)
+endif()
+
+if(ETCHED_BUILD_BENCHMARKS)
+  add_subdirectory(benchmarking)
 endif()
 
 include(CMakePackageConfigHelpers)
