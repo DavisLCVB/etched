@@ -58,7 +58,8 @@ template <typename T, detail::String Tag>
       .shortName = shortName,
       .longName = detail::stripDashes(longName),
       .description = description,
-      .defaultValue = defaultValue};
+      .defaultValue = defaultValue,
+      .callback = NoCallbackType{}};
 }
 
 /**
@@ -79,7 +80,8 @@ template <typename T, detail::String Tag>
       .shortName = shortName,
       .longName = detail::stripDashes(longName),
       .description = description,
-      .defaultValue = none<T>()};
+      .defaultValue = none<T>(),
+      .callback = NoCallbackType{}};
 }
 
 // --- Specialized Type Helpers ---
@@ -213,11 +215,10 @@ template <detail::String Tag, typename CallbackType>
 [[nodiscard]] consteval auto optVersion(
     [[maybe_unused]] const char* versionString, char shortName,
     std::string_view longName, const char* description = "Show version") {
-  return optCallback<"version">(
-      shortName, longName, description, [versionString]() -> auto {
-        std::cout << versionString << '\n';
-        return ok(Output{.success = true, .shouldExit = true});
-      });
+  auto versionBind = [versionString]() -> void {
+    std::cout << versionString << '\n';
+  };
+  return optCallback<"version">(shortName, longName, description, versionBind);
 }
 
 /**
@@ -243,7 +244,7 @@ template <typename T = std::string_view>
 template <detail::String Tag, detail::IsArgument... SubOptions>
 [[nodiscard]] consteval auto cmd(const char* description, SubOptions... opts) {
   return detail::Command<Tag, DefaultConfig, SubOptions...>{description,
-                                                                    opts...};
+                                                            opts...};
 }
 
 /** @} */

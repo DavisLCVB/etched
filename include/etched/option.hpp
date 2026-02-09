@@ -8,10 +8,8 @@
 
 #include "config.hpp"
 #include "contracts.hpp"
-#include "jump_table.hpp"
 #include "orchestrator.hpp"
 #include "strings.hpp"
-#include "symbol_table.hpp"
 
 namespace etched::detail {
 
@@ -78,7 +76,7 @@ struct Option {
   std::string_view description;
   Optional<OptValueType> defaultValue;
   static constexpr auto tag = OptTag;
-  [[no_unique_address]] CallbackType callback = CallbackType{};
+  [[no_unique_address]] CallbackType callback;
 
   [[nodiscard]] auto trigger() -> Result<Output> {
     if constexpr (!std::is_same_v<CallbackType, NoCallbackType>) {
@@ -106,8 +104,7 @@ struct Command {
   std::string_view description;
   bool matched = false;
 
-  using OrchestratorType =
-      etched::DefaultOrchestrator<Conf, Options...>;
+  using OrchestratorType = etched::DefaultOrchestrator<Conf, Options...>;
 
   OrchestratorType orchestrator;
 
@@ -141,6 +138,10 @@ struct Command {
 
   [[nodiscard]] auto getOptions() -> typename OrchestratorType::OptionsTuple {
     return orchestrator.getOptions();
+  }
+
+  [[nodiscard]] auto help() const -> std::string_view {
+    return orchestrator.helpText();
   }
 };
 
