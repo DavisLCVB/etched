@@ -73,7 +73,7 @@ struct LexerTestConfig {
 };
 
 inline void customParserReplacementTest() {
-    auto parser = ArgumentParser<TraceConfig, etched::detail::Option<int, "port">>(
+    auto parser = ArgumentParser(WithConfig<TraceConfig>{},
         "TestApp", "TestDescription",
         optInt<"port">('p', "--port", "Port", some(8080))
     );
@@ -87,7 +87,7 @@ inline void customParserReplacementTest() {
 }
 
 inline void customLexerReplacementTest() {
-    auto parser = ArgumentParser<LexerTestConfig, etched::detail::Option<int, "port">>(
+    auto parser = ArgumentParser(WithConfig<LexerTestConfig>{},
         "TestApp", "TestDescription",
         optInt<"port">('p', "--port", "Port", some(8080))
     );

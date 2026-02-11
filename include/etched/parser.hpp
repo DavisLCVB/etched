@@ -168,8 +168,8 @@ struct DefaultParser {
   template <typename Lexer, typename SymbolTable, typename JumpTable,
             typename Tuple>
   [[nodiscard]] static auto parse(Lexer& lexer, const SymbolTable& st,
-                                  const JumpTable& jt,
-                                  Tuple& options) -> Result<Output> {
+                                  const JumpTable& jt, Tuple& options)
+      -> Result<Output> {
     Implementation<Lexer, SymbolTable, JumpTable, Tuple> impl(lexer, st, jt,
                                                               options);
     return impl.parse();

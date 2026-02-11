@@ -27,14 +27,12 @@ constexpr std::string_view noLong;
  */
 constexpr const char* noDesc = "";
 
+/**
+ * @brief Constant for missing default value.
+ * @tparam T The type of the value.
+ */
 template <typename T>
 constexpr auto noDefault = etched::none<T>();
-
-/**
- * @defgroup Helpers Option Definition Helpers
- * @brief Functions used to define the command-line interface in a declarative way.
- * @{
- */
 
 // --- Generic Options ---
 
@@ -91,6 +89,11 @@ template <typename T, detail::String Tag>
  * 
  * @tparam Tag Unique identifier.
  * @tparam T Integer type (int, uint32_t, etc.). Defaults to int.
+ * @param shortName Short flag.
+ * @param longName Long flag.
+ * @param description Help text.
+ * @param defaultValue Default value.
+ * @return Internal option representation.
  */
 template <detail::String Tag, typename T = int>
   requires detail::Integer<T>
@@ -101,7 +104,14 @@ template <detail::String Tag, typename T = int>
 }
 
 /**
- * @brief Defines an integer-based option explicitly without a default value using Optional<T>.
+ * @brief Defines an integer-based option explicitly without a default value.
+ * 
+ * @tparam Tag Unique identifier.
+ * @tparam T Integer type.
+ * @param shortName Short flag.
+ * @param longName Long flag.
+ * @param description Help text.
+ * @return Internal option representation.
  */
 template <detail::String Tag, typename T = int>
   requires detail::Integer<T>
@@ -114,7 +124,11 @@ template <detail::String Tag, typename T = int>
  * @brief Defines a boolean flag (true if present, false otherwise).
  * 
  * @tparam Tag Unique identifier.
+ * @param shortName Short flag.
+ * @param longName Long flag.
+ * @param description Help text.
  * @param defaultValue Initial value.
+ * @return Internal option representation.
  */
 template <detail::String Tag>
 [[nodiscard]] consteval auto optBool(char shortName, std::string_view longName,
@@ -125,6 +139,12 @@ template <detail::String Tag>
 
 /**
  * @brief Defines a boolean flag explicitly without a default value.
+ * 
+ * @tparam Tag Unique identifier.
+ * @param shortName Short flag.
+ * @param longName Long flag.
+ * @param description Help text.
+ * @return Internal option representation.
  */
 template <detail::String Tag>
 [[nodiscard]] consteval auto optBool(char shortName, std::string_view longName,
@@ -134,6 +154,13 @@ template <detail::String Tag>
 
 /**
  * @brief Defines a string-based option.
+ * 
+ * @tparam Tag Unique identifier.
+ * @param shortName Short flag.
+ * @param longName Long flag.
+ * @param description Help text.
+ * @param defaultValue Default value.
+ * @return Internal option representation.
  */
 template <detail::String Tag>
 [[nodiscard]] consteval auto optString(
@@ -145,6 +172,12 @@ template <detail::String Tag>
 
 /**
  * @brief Defines a string-based option explicitly without a default value.
+ * 
+ * @tparam Tag Unique identifier.
+ * @param shortName Short flag.
+ * @param longName Long flag.
+ * @param description Help text.
+ * @return Internal option representation.
  */
 template <detail::String Tag>
 [[nodiscard]] consteval auto optString(char shortName,
@@ -155,6 +188,14 @@ template <detail::String Tag>
 
 /**
  * @brief Defines a floating-point option.
+ * 
+ * @tparam Tag Unique identifier.
+ * @tparam T Floating point type.
+ * @param shortName Short flag.
+ * @param longName Long flag.
+ * @param description Help text.
+ * @param defaultValue Default value.
+ * @return Internal option representation.
  */
 template <detail::String Tag, typename T = double>
   requires std::is_floating_point_v<T>
@@ -166,6 +207,13 @@ template <detail::String Tag, typename T = double>
 
 /**
  * @brief Defines a floating-point option explicitly without a default value.
+ * 
+ * @tparam Tag Unique identifier.
+ * @tparam T Floating point type.
+ * @param shortName Short flag.
+ * @param longName Long flag.
+ * @param description Help text.
+ * @return Internal option representation.
  */
 template <detail::String Tag, typename T = double>
   requires std::is_floating_point_v<T>
@@ -181,7 +229,11 @@ template <detail::String Tag, typename T = double>
  * 
  * @tparam Tag Unique identifier.
  * @tparam CallbackType A callable object. Can return void or Result<Output>.
+ * @param shortName Short flag.
+ * @param longName Long flag.
+ * @param description Help text.
  * @param callback The function to execute.
+ * @return Internal option representation.
  */
 template <detail::String Tag, typename CallbackType>
   requires detail::IsAction<CallbackType>
@@ -201,6 +253,10 @@ template <detail::String Tag, typename CallbackType>
 
 /**
  * @brief Defines a help option that automatically prints usage and signals exit.
+ * 
+ * @param shortName Short flag.
+ * @param longName Long flag.
+ * @return Internal option representation.
  */
 [[nodiscard]] consteval auto optHelp(char shortName,
                                      std::string_view longName) {
@@ -211,6 +267,12 @@ template <detail::String Tag, typename CallbackType>
 
 /**
  * @brief Defines a version option.
+ * 
+ * @param versionString The string to print.
+ * @param shortName Short flag.
+ * @param longName Long flag.
+ * @param description Help text.
+ * @return Internal option representation.
  */
 [[nodiscard]] consteval auto optVersion(
     [[maybe_unused]] const char* versionString, char shortName,
@@ -225,6 +287,8 @@ template <detail::String Tag, typename CallbackType>
  * @brief Defines a collector for positional arguments.
  * 
  * @tparam T The type of each positional argument.
+ * @param description Help text.
+ * @return Internal positional option representation.
  */
 template <typename T = std::string_view>
 [[nodiscard]] consteval auto optPositional(const char* description) {
@@ -238,8 +302,10 @@ template <typename T = std::string_view>
  * @brief Defines a subcommand with its own set of arguments.
  * 
  * @tparam Tag Unique identifier (the name of the command).
+ * @tparam SubOptions Types of the sub-arguments.
  * @param description Description of the subcommand.
  * @param opts Options and arguments specific to this subcommand.
+ * @return Internal command representation.
  */
 template <detail::String Tag, detail::IsArgument... SubOptions>
 [[nodiscard]] consteval auto cmd(const char* description, SubOptions... opts) {
@@ -247,7 +313,12 @@ template <detail::String Tag, detail::IsArgument... SubOptions>
                                                             opts...};
 }
 
-/** @} */
+/**
+ * @brief Helper struct to allow users to specify a custom configuration when constructing the ArgumentParser.
+ * @tparam T The custom configuration type.
+ */
+template <detail::IsOrchestratorConfig T>
+struct WithConfig {};
 
 }  // namespace etched
 

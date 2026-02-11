@@ -4,15 +4,15 @@
 
 #include "config.hpp"
 #include "contracts.hpp"
+#include "helpers.hpp"
 #include "orchestrator.hpp"
 #include "strings.hpp"
 
 namespace etched {
 
-//TODO Document inner components
+//TODO Documents inner components
 
-template <detail::IsOrchestratorConfig Conf = DefaultConfig,
-          detail::IsArgument... Options>
+template <detail::IsOrchestratorConfig Conf, detail::IsArgument... Options>
 class ArgumentParser {
   static_assert(sizeof...(Options) <= Conf::maxArgs,
                 "Number of options exceeds maximum configured arguments");
@@ -20,12 +20,18 @@ class ArgumentParser {
   using OrchestratorType = DefaultOrchestrator<Conf, Options...>;
 
  public:
-  consteval ArgumentParser(std::string_view appName,
+  consteval ArgumentParser(WithConfig<Conf> /*unused*/,
+                           std::string_view appName,
                            std::string_view appDescription,  // NOLINT
                            Options... opts)
       : name_(appName),
         description_(appDescription),
         orchestrator_(appName, appDescription, opts...) {}
+
+  consteval ArgumentParser(std::string_view appName,
+                           std::string_view appDescription, Options... opts)
+      : ArgumentParser(WithConfig<DefaultConfig>{}, appName, appDescription,
+                       opts...) {}
 
   [[nodiscard]] auto parse(const int argc, const char* argv[])  //NOLINT
       -> Result<Output> {                                       // NOLINT
@@ -67,6 +73,14 @@ class ArgumentParser {
   std::string_view description_;
   OrchestratorType orchestrator_;
 };
+
+template <detail::IsArgument... Opts>
+ArgumentParser(std::string_view, std::string_view, Opts...)
+    -> ArgumentParser<DefaultConfig, Opts...>;
+
+template <detail::IsOrchestratorConfig CustomConf, detail::IsArgument... Opts>
+ArgumentParser(WithConfig<CustomConf>, std::string_view, std::string_view,
+               Opts...) -> ArgumentParser<CustomConf, Opts...>;
 
 }  // namespace etched
 

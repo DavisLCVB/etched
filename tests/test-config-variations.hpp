@@ -20,8 +20,7 @@ struct NoClustersConfig : public etched::DefaultConfig {
 inline void testNoClusters() {
   using namespace etched;
   auto parser =
-      ArgumentParser<NoClustersConfig, etched::detail::Option<bool, "flag1">,
-                     etched::detail::Option<bool, "flag2">>(
+      ArgumentParser(WithConfig<NoClustersConfig>{},
           "TestApp", "TestDescription",
           optBool<"flag1">('a', "flag1", "Flag 1"),
           optBool<"flag2">('b', "flag2", "Flag 2"));
@@ -49,8 +48,7 @@ struct PrefferValuesConfig : public etched::DefaultConfig {
 
 inline void testPrefferValues() {
   using namespace etched;
-  auto parser = ArgumentParser<PrefferValuesConfig,
-                               etched::detail::Option<std::string_view, "val">>(
+  auto parser = ArgumentParser(WithConfig<PrefferValuesConfig>{},
       "TestApp", "TestDescription", optString<"val">('v', "value", "Value"));
 
   // In prefferValues = true, if we are waiting for a value, "-x" should be
@@ -80,7 +78,7 @@ inline void testTinySymbolTable() {
   // If maxStringSize is 4, "longname" should be truncated to "lon" (3 chars +
   // null)
   auto parser =
-      ArgumentParser<TinySTAppConfig, etched::detail::Option<bool, "longname">>(
+      ArgumentParser(WithConfig<TinySTAppConfig>{},
           "TestApp", "TestDescription",
           optBool<"longname">('l', "longname", "Long name"));
 
@@ -103,7 +101,7 @@ struct WideHelpAppConfig : public etched::DefaultConfig {
 inline void testHelpColWidth() {
   using namespace etched;
   auto parser =
-      ArgumentParser<WideHelpAppConfig, etched::detail::Option<bool, "f">>(
+      ArgumentParser(WithConfig<WideHelpAppConfig>{},
           "TestApp", "TestDescription",
           optBool<"f">('f', "flag", "Flag description"));
 

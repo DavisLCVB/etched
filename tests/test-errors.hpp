@@ -46,7 +46,7 @@ inline void errorUnknownOptionTest() {
 }
 
 inline void errorExceedMaxArgsTest() {
-  auto parser = ArgumentParser<SmallConfig, detail::Option<bool, "v">>(
+  auto parser = ArgumentParser(WithConfig<SmallConfig>{},
       "TestApp", "TestDescription", optBool<"v">('v', "--verbose", "Verbose"));
 
   const char* argv[] = {"prog", "-v", "-v", "-v"};
