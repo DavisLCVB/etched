@@ -9,7 +9,7 @@
 #include "strings.hpp"
 
 namespace etched {
-constexpr const char* version = "1.0.0";
+constexpr const char* version = "2.0.0";
 }  // namespace etched
 
 #endif  // ETCHED_LIB_HPP
