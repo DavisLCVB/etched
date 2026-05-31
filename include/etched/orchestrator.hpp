@@ -104,7 +104,7 @@ class DefaultOrchestrator {
     if constexpr (detail::IsPositionalOption<OptType>) {
       return !opt.value.empty();
     } else if constexpr (detail::IsOption<OptType>) {
-      return opt.value.hasValue();
+      return opt.value.has_value();
     } else {
       return opt.matched;
     }
@@ -131,8 +131,8 @@ class DefaultOrchestrator {
   template <detail::IsArgument Arg>
   [[nodiscard]] static consteval auto initOptions(Arg arg) -> Arg {
     if constexpr (detail::IsOption<Arg>) {
-      if (arg.defaultValue.hasValue()) {
-        arg.value = arg.defaultValue.valueOr(typename Arg::ValueType{});
+      if (arg.defaultValue.has_value()) {
+        arg.value = arg.defaultValue.value_or(typename Arg::ValueType{});
       }
     }
     return arg;

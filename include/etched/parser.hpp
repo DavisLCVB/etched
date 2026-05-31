@@ -102,8 +102,8 @@ struct DefaultParser {
     [[nodiscard]] auto parseC() -> Result<Output> {
       auto token = lexer->currentToken();
       auto metadata = st->find(token.value);
-      if (metadata.hasValue() && metadata.get().type == EntryType::COMMAND) {
-        auto result = jt->dispatch(metadata.get().index, *options, *lexer);
+      if (metadata.has_value() && metadata.value().type == EntryType::COMMAND) {
+        auto result = jt->dispatch(metadata.value().index, *options, *lexer);
         if (!result.isOk()) {
           return result;
         }
@@ -114,8 +114,8 @@ struct DefaultParser {
       }
 
       auto posIdx = st->positionalIndex();
-      if (posIdx.hasValue()) {
-        auto res = jt->dispatch(posIdx.get(), *options, *lexer);
+      if (posIdx.has_value()) {
+        auto res = jt->dispatch(posIdx.value(), *options, *lexer);
         if (!res.isOk()) {
           return res;
         }
@@ -130,8 +130,8 @@ struct DefaultParser {
         auto token = lexer->currentToken();
         if (match(token, TokenType::POSITIONAL)) {
           auto posIdx = st->positionalIndex();
-          if (posIdx.hasValue()) {
-            auto res = jt->dispatch(posIdx.get(), *options, *lexer);
+          if (posIdx.has_value()) {
+            auto res = jt->dispatch(posIdx.value(), *options, *lexer);
             if (!res.isOk()) {
               return res;
             }
@@ -152,10 +152,10 @@ struct DefaultParser {
       if (match(token, TokenType::SHORT_OPTION) ||
           match(token, TokenType::LONG_OPTION)) {
         auto metadata = st->find(token.value);
-        if (!metadata.hasValue()) {
+        if (!metadata.has_value()) {
           return err<Output>("Unknown option encountered", token.value);
         }
-        return jt->dispatch(metadata.get().index, *options, *lexer);
+        return jt->dispatch(metadata.value().index, *options, *lexer);
       }
       return err<Output>("Expected option", token.value);
     }

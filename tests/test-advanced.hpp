@@ -550,7 +550,7 @@ inline void parserManyOptionsTest() {
     throw "opt1 wrong";
   if (parser.get<"opt5">().value() != 500)
     throw "opt5 wrong";
-  if (!parser.get<"verbose">().valueOr(false))
+  if (!parser.get<"verbose">().value_or(false))
     throw "verbose wrong";
   if (parser.get<"name">().value() != "test")
     throw "name wrong";
@@ -825,7 +825,7 @@ inline void commandWithManyOptionsTest() {
     throw "Env wrong";
   if (deploy.get<"replicas">().value() != 5)
     throw "Replicas wrong";
-  if (!deploy.get<"dry-run">().valueOr(false))
+  if (!deploy.get<"dry-run">().value_or(false))
     throw "Dry-run wrong";
   if (deploy.get<"image">().value() != "v2.0.0")
     throw "Image wrong";
@@ -861,7 +861,7 @@ inline void multipleCommandsTest() {
     throw "stop command failed";
   if (!p2.has<"stop">())
     throw "stop command not matched";
-  if (!p2.get<"stop">().get<"force">().valueOr(false)) {
+  if (!p2.get<"stop">().get<"force">().value_or(false)) {
     throw "stop force wrong";
   }
 

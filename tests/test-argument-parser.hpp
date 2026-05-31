@@ -111,7 +111,7 @@ inline void argumentParserBoolFlagTest() {
     throw "Parser should succeed with bool flag";
   }
 
-  if (!mutableParser.has<"verbose">() || !mutableParser.get<"verbose">().valueOr(false)) {
+  if (!mutableParser.has<"verbose">() || !mutableParser.get<"verbose">().value_or(false)) {
     throw "Verbose should be true";
   }
 }
@@ -137,7 +137,7 @@ inline void argumentParserMixedShortLongTest() {
   if (mutableParser.get<"host">().value() != "example.com") {
     throw "Host should be example.com";
   }
-  if (!mutableParser.get<"verbose">().valueOr(false)) {
+  if (!mutableParser.get<"verbose">().value_or(false)) {
     throw "Verbose should be true";
   }
 }

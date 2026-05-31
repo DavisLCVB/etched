@@ -17,24 +17,24 @@ inline void symbolTableInsertAndFindTest() {
   constexpr auto table = makeTable();
 
   auto result1 = table.find("port");
-  if (!result1.hasValue()) {
+  if (!result1.has_value()) {
     throw "Should find 'port' in table";
   }
-  if (result1.get().index != 0) {
+  if (result1.value().index != 0) {
     throw "port should have index 0";
   }
 
   auto result2 = table.find("host");
-  if (!result2.hasValue()) {
+  if (!result2.has_value()) {
     throw "Should find 'host' in table";
   }
-  if (result2.get().index != 1) {
+  if (result2.value().index != 1) {
     throw "host should have index 1";
   }
 
   // Also check short names
-  if (!table.find("p").hasValue()) throw "Should find 'p'";
-  if (!table.find("h").hasValue()) throw "Should find 'h'";
+  if (!table.find("p").has_value()) throw "Should find 'p'";
+  if (!table.find("h").has_value()) throw "Should find 'h'";
 }
 
 inline void symbolTableNotFoundTest() {
@@ -47,7 +47,7 @@ inline void symbolTableNotFoundTest() {
   constexpr auto table = makeTable();
 
   auto result = table.find("unknown");
-  if (result.hasValue()) {
+  if (result.has_value()) {
     throw "Should not find 'unknown' in table";
   }
 }

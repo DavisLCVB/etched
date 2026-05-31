@@ -59,7 +59,7 @@ inline void testPrefferValues() {
   if (!result.isOk())
     throw "PrefferValues failed";
   auto val = parser.get<"val">();
-  if (!val.hasValue() || val.value() != "-x")
+  if (!val.has_value() || val.value() != "-x")
     throw "Value should have been '-x'";
 }
 
