@@ -12,8 +12,8 @@ inline void argumentParserBuildSymbolTableTest() {
   const char* argv[] = {"prog", "--port", "9000"};
   auto result = parser.parse(3, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Parser should succeed with --port";
   }
 
@@ -32,8 +32,8 @@ inline void argumentParserShortOptionTest() {
   auto mutableParser = parser;
   auto result = mutableParser.parse(3, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Parser should succeed with -p";
   }
 
@@ -51,8 +51,8 @@ inline void argumentParserMultipleOptionsTest() {
   auto mutableParser = parser;
   auto result = mutableParser.parse(5, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Parser should succeed";
   }
 
@@ -73,7 +73,7 @@ inline void argumentParserDefaultValuesTest() {
   auto mutableParser = parser;
   auto result = mutableParser.parse(1, argv);
 
-  if (!result.isOk()) {
+  if (!result.has_value()) {
     throw "Parser should succeed with no args";
   }
 
@@ -93,7 +93,7 @@ inline void argumentParserUnknownOptionTest() {
   auto mutableParser = parser;
   auto result = mutableParser.parse(3, argv);
 
-  if (result.isOk()) {
+  if (result.has_value()) {
     throw "Parser should fail with unknown option";
   }
 }
@@ -106,8 +106,8 @@ inline void argumentParserBoolFlagTest() {
   auto mutableParser = parser;
   auto result = mutableParser.parse(2, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Parser should succeed with bool flag";
   }
 
@@ -126,8 +126,8 @@ inline void argumentParserMixedShortLongTest() {
   auto mutableParser = parser;
   auto result = mutableParser.parse(6, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Parser should succeed with mixed options";
   }
 

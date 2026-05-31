@@ -59,8 +59,8 @@ struct PositionalOption {
   char shortName = '\0';
   std::string_view longName;
 
-  [[nodiscard]] auto trigger() -> Result<Output> {
-    return ok(Output{.success = true, .shouldExit = false});
+  [[nodiscard]] auto trigger() -> Expected<Output, RuntimeError> {
+    return Output{.success = true, .shouldExit = false};
   }
 };
 
@@ -78,19 +78,22 @@ struct Option {
   static constexpr auto tag = OptTag;
   [[no_unique_address]] CallbackType callback;
 
-  [[nodiscard]] auto trigger() -> Result<Output> {
+  [[nodiscard]] auto trigger() -> Expected<Output, RuntimeError> {
     if constexpr (!std::is_same_v<CallbackType, NoCallbackType>) {
       if constexpr (std::is_same_v<std::invoke_result_t<CallbackType>, void>) {
         callback();
-      } else {
+      } else if constexpr (std::is_same_v<std::invoke_result_t<CallbackType>,
+                                          Expected<Output, RuntimeError>>) {
         auto res = callback();
-        if (!res.isOk()) {
+        if (!res.has_value()) {
           return res;
         }
         return res;
+      } else {
+        return callback();
       }
     }
-    return ok(Output{.success = true, .shouldExit = false});
+    return Output{.success = true, .shouldExit = false};
   }
 };
 
@@ -111,7 +114,7 @@ struct Command {
   consteval Command(const char* desc, Options... opts)
       : description(desc), orchestrator(CmdTag.view(), desc, opts...) {}
 
-  [[nodiscard]] auto parse(typename Config::Lexer& lexer) -> Result<Output> {
+  [[nodiscard]] auto parse(typename Config::Lexer& lexer) -> Expected<Output, RuntimeError> {
     matched = true;
     return orchestrator.parseRecursive(lexer);
   }

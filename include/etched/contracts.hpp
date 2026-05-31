@@ -29,7 +29,7 @@ namespace etched {
  * @return Result containing the deserialized value or an error.
  */
 template <typename T>
-auto deserialize(std::string_view str, T*) -> Result<T>;
+auto deserialize(std::string_view str, T*) -> Expected<T, RuntimeError>;
 
 /**
  * @brief Specialization for positional containers to prevent deserialization.
@@ -40,8 +40,8 @@ auto deserialize(std::string_view str, T*) -> Result<T>;
 template <typename T>
 inline auto deserialize(std::string_view /*unused*/,
                         detail::PositionalContainer<T>* /*unused*/)
-    -> Result<detail::PositionalContainer<T>> {
-  return err<detail::PositionalContainer<T>>("Cannot deserialize container");
+    -> Expected<detail::PositionalContainer<T>, RuntimeError> {
+  return etched::err(RuntimeError{"Cannot deserialize container"});
 }
 }  // namespace etched
 
@@ -54,7 +54,7 @@ template <typename T>
 concept IsDeserializable = requires(std::string_view str) {
   {
     deserialize(str, static_cast<T*>(nullptr))
-  } -> std::convertible_to<Result<T>>;
+  } -> std::convertible_to<Expected<T, RuntimeError>>;
 };
 
 /**
@@ -71,7 +71,7 @@ concept IsAction =
     std::same_as<T, NoCallbackType> ||
     (std::is_invocable_v<T> &&
      (std::same_as<std::invoke_result_t<T>, void> ||
-      std::convertible_to<std::invoke_result_t<T>, Result<Output>>));
+      std::convertible_to<std::invoke_result_t<T>, Expected<Output, RuntimeError>>));
 
 /**
  * @brief Concept for positional options.
@@ -96,7 +96,7 @@ concept IsOption =
         t.value
       } -> std::convertible_to<const Optional<typename T::ValueType>&>;
     } || IsPositionalOption<T>) && requires(T t) {
-      { t.trigger() } -> std::convertible_to<Result<Output>>;
+      { t.trigger() } -> std::convertible_to<Expected<Output, RuntimeError>>;
     };
 
 /**
@@ -126,7 +126,7 @@ concept IsCommand =
       { T::tag };
       { t.name } -> std::convertible_to<std::string_view>;
     } && requires(T t, typename T::Config::Lexer& l) {
-      { t.parse(l) } -> std::convertible_to<Result<Output>>;
+      { t.parse(l) } -> std::convertible_to<Expected<Output, RuntimeError>>;
     };
 
 /**
@@ -182,7 +182,7 @@ enum class ParsingContext : uint8_t { DEFAULT, WAITING_FOR_VALUE };
 template <typename T>
 concept IsLexer =
     requires(T t, int argc, const char** argv, ParsingContext ctx) {
-      { t.nextToken(ctx) } -> std::same_as<Result<Token>>;
+      { t.nextToken(ctx) } -> std::same_as<Expected<Token, RuntimeError>>;
       { t.setTokens(argc, argv) } -> std::same_as<void>;
       { t.currentToken() } -> std::same_as<Token>;
     } && std::is_default_constructible_v<T>;
@@ -203,7 +203,7 @@ concept IsSymbolTable =
  */
 template <typename T, typename Lexer, typename Options>
 concept IsJumpTable = requires(T t, size_t index, Options& opts, Lexer& l) {
-  { t.dispatch(index, opts, l) } -> std::same_as<Result<Output>>;
+  { t.dispatch(index, opts, l) } -> std::same_as<Expected<Output, RuntimeError>>;
   { T::create() } -> std::same_as<T>;
 } && IsLexer<Lexer>;
 
@@ -218,7 +218,7 @@ concept IsParser = IsLexer<Lexer> && IsSymbolTable<SymbolTable> &&
                             const JumpTable& jt, Options& opts) {
                      {
                        P::parse(l, st, jt, opts)
-                     } -> std::convertible_to<Result<Output>>;
+                     } -> std::convertible_to<Expected<Output, RuntimeError>>;
                    };
 
 /**

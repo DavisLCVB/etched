@@ -14,11 +14,11 @@ namespace etched::detail {
 template <IsLexer Lexer, IsArgument... Args>
 class DefaultJumpTable {
   using ArgumentTuple = std::tuple<Args...>;
-  using Handler = Result<Output> (*)(ArgumentTuple&, Lexer&);
+  using Handler = Expected<Output, RuntimeError> (*)(ArgumentTuple&, Lexer&);
   std::array<Handler, sizeof...(Args)> handlers_;
 
   template <size_t I>
-  static auto handle(ArgumentTuple& args, Lexer& l) -> Result<Output> {
+  static auto handle(ArgumentTuple& args, Lexer& l) -> Expected<Output, RuntimeError> {
     auto& item = std::get<I>(args);
     using ItemType = std::decay_t<decltype(item)>;
     if constexpr (IsCommand<ItemType>) {
@@ -27,42 +27,42 @@ class DefaultJumpTable {
       auto token = l.currentToken();
       using InnerType = typename ItemType::InnerValueType;
       auto dRes = deserialize(token.value, static_cast<InnerType*>(nullptr));
-      if (!dRes.isOk()) {
-        return err<Output>(dRes.unwrapErr());
+      if (!dRes.has_value()) {
+        return etched::err(dRes.error());
       }
-      item.value.add(dRes.unwrap());
+      item.value.add(dRes.value());
       auto tRes = l.nextToken();
-      if (!tRes.isOk()) {
-        return err<Output>(std::move(tRes.unwrapErr()));
+      if (!tRes.has_value()) {
+        return etched::err(std::move(tRes.error()));
       }
-      return ok(Output{.success = true, .shouldExit = false});
+      return Output{.success = true, .shouldExit = false};
     } else {
       if constexpr (IsOptionFlag<ItemType>) {
         item.value = true;
         auto tRes = l.nextToken();
-        if (!tRes.isOk()) {
-          return err<Output>(std::move(tRes.unwrapErr()));
+        if (!tRes.has_value()) {
+          return etched::err(std::move(tRes.error()));
         }
       } else {
         using ValueType = typename ItemType::ValueType;
         auto ntRes = l.nextToken(ParsingContext::WAITING_FOR_VALUE);
-        if (!ntRes.isOk()) {
-          return err<Output>(std::move(ntRes.unwrapErr()));
+        if (!ntRes.has_value()) {
+          return etched::err(std::move(ntRes.error()));
         }
-        auto nextToken = ntRes.unwrap();
+        auto nextToken = ntRes.value();
         if (nextToken.type == Lexer::TokenType::END_OF_INPUT) {
-          return err<Output>(
-              "Expected value for option but found end of input");
+          return etched::err(RuntimeError{
+              "Expected value for option but found end of input"});
         }
         std::string_view token = nextToken.value;
         auto result = deserialize(token, static_cast<ValueType*>(nullptr));
-        if (!result.isOk()) {
-          return err<Output>(result.unwrapErr());
+        if (!result.has_value()) {
+          return etched::err(result.error());
         }
-        item.value = result.unwrap();
+        item.value = result.value();
         auto tRes = l.nextToken();
-        if (!tRes.isOk()) {
-          return err<Output>(std::move(tRes.unwrapErr()));
+        if (!tRes.has_value()) {
+          return etched::err(std::move(tRes.error()));
         }
       }
       return item.trigger();
@@ -71,9 +71,9 @@ class DefaultJumpTable {
 
  public:
   [[nodiscard]] auto dispatch(size_t index, ArgumentTuple& args, Lexer& l) const
-      -> Result<Output> {
+      -> Expected<Output, RuntimeError> {
     if (index >= handlers_.size()) {
-      return err<Output>("Invalid jump table index");
+      return etched::err(RuntimeError{"Invalid jump table index"});
     }
     return handlers_[index](args, l);  // NOLINT
   }

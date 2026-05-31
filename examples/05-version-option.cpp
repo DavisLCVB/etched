@@ -15,12 +15,12 @@ auto main(int argc, const char* argv[]) -> int {  // NOLINT
       optHelp('h', "--help"));
 
   auto result = parser.parse(argc, argv);
-  if (result.isOk() && result.unwrap().shouldExit) {
+  if (result.has_value() && result.value().shouldExit) {
     return 0;
   }
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     return 1;
   }
 

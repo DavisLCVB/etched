@@ -49,93 +49,92 @@ namespace etched {
 
 template <>
 inline auto deserialize(std::string_view str, tests::Vector3D* /*unused*/)
-    -> Result<tests::Vector3D> {
+    -> Expected<tests::Vector3D, RuntimeError> {
   size_t first = str.find(',');
   size_t second = str.find(',', first + 1);
   if (first == std::string_view::npos || second == std::string_view::npos) {
-    return err<tests::Vector3D>("Vector3D format: x,y,z");
+    return etched::err(RuntimeError{"Vector3D format: x,y,z"});
   }
   auto xr = deserialize(str.substr(0, first), static_cast<double*>(nullptr));
   auto yr = deserialize(str.substr(first + 1, second - first - 1),
                         static_cast<double*>(nullptr));
   auto zr = deserialize(str.substr(second + 1), static_cast<double*>(nullptr));
-  if (!xr.isOk() || !yr.isOk() || !zr.isOk()) {
-    return err<tests::Vector3D>("Invalid Vector3D coordinates");
+  if (!xr.has_value() || !yr.has_value() || !zr.has_value()) {
+    return etched::err(RuntimeError{"Invalid Vector3D coordinates"});
   }
-  return ok(
-      tests::Vector3D{.x = xr.unwrap(), .y = yr.unwrap(), .z = zr.unwrap()});
+  return tests::Vector3D{.x = xr.value(), .y = yr.value(), .z = zr.value()};
 }
 
 template <>
 inline auto deserialize(std::string_view str, tests::IPAddress* /*unused*/)
-    -> Result<tests::IPAddress> {
+    -> Expected<tests::IPAddress, RuntimeError> {
   tests::IPAddress ip{};
   size_t pos = 0;
   for (int i = 0; i < 4; ++i) {
     size_t dot = (i < 3) ? str.find('.', pos) : str.size();
     if (dot == std::string_view::npos) {
-      return err<tests::IPAddress>("IPAddress format: a.b.c.d");
+      return etched::err(RuntimeError{"IPAddress format: a.b.c.d"});
     }
     auto octetStr = str.substr(pos, dot - pos);
     auto res = deserialize(octetStr, static_cast<int*>(nullptr));
-    if (!res.isOk()) {
-      return err<tests::IPAddress>("Invalid IP octet");
+    if (!res.has_value()) {
+      return etched::err(RuntimeError{"Invalid IP octet"});
     }
-    int val = res.unwrap();
+    int val = res.value();
     if (val < 0 || val > UINT8_MAX) {
-      return err<tests::IPAddress>("IP octet out of range 0-255");
+      return etched::err(RuntimeError{"IP octet out of range 0-255"});
     }
     ip.octets[i] = static_cast<uint8_t>(val);  // NOLINT
     pos = dot + 1;
   }
-  return ok(ip);
+  return ip;
 }
 
 template <>
 inline auto deserialize(std::string_view str, tests::TimeRange* /*unused*/)
-    -> Result<tests::TimeRange> {
+    -> Expected<tests::TimeRange, RuntimeError> {
   // Format: HH:MM-HH:MM
   auto dash = str.find('-');
   if (dash == std::string_view::npos) {
-    return err<tests::TimeRange>("TimeRange format: HH:MM-HH:MM");
+    return etched::err(RuntimeError{"TimeRange format: HH:MM-HH:MM"});
   }
   auto start = str.substr(0, dash);
   auto end = str.substr(dash + 1);
   auto sColon = start.find(':');
   auto eColon = end.find(':');
   if (sColon == std::string_view::npos || eColon == std::string_view::npos) {
-    return err<tests::TimeRange>("TimeRange format: HH:MM-HH:MM");
+    return etched::err(RuntimeError{"TimeRange format: HH:MM-HH:MM"});
   }
   auto sh = deserialize(start.substr(0, sColon), static_cast<int*>(nullptr));
   auto sm = deserialize(start.substr(sColon + 1), static_cast<int*>(nullptr));
   auto eh = deserialize(end.substr(0, eColon), static_cast<int*>(nullptr));
   auto em = deserialize(end.substr(eColon + 1), static_cast<int*>(nullptr));
-  if (!sh.isOk() || !sm.isOk() || !eh.isOk() || !em.isOk()) {
-    return err<tests::TimeRange>("Invalid time values");
+  if (!sh.has_value() || !sm.has_value() || !eh.has_value() || !em.has_value()) {
+    return etched::err(RuntimeError{"Invalid time values"});
   }
-  return ok(tests::TimeRange{.startHour = sh.unwrap(),
-                             .startMin = sm.unwrap(),
-                             .endHour = eh.unwrap(),
-                             .endMin = em.unwrap()});
+  return tests::TimeRange{.startHour = sh.value(),
+                          .startMin = sm.value(),
+                          .endHour = eh.value(),
+                          .endMin = em.value()};
 }
 
 template <>
 inline auto deserialize(std::string_view str, tests::SemVer* /*unused*/)
-    -> Result<tests::SemVer> {
+    -> Expected<tests::SemVer, RuntimeError> {
   size_t d1 = str.find('.');
   size_t d2 = str.find('.', d1 + 1);
   if (d1 == std::string_view::npos || d2 == std::string_view::npos) {
-    return err<tests::SemVer>("SemVer format: major.minor.patch");
+    return etched::err(RuntimeError{"SemVer format: major.minor.patch"});
   }
   auto maj = deserialize(str.substr(0, d1), static_cast<int*>(nullptr));
   auto min =
       deserialize(str.substr(d1 + 1, d2 - d1 - 1), static_cast<int*>(nullptr));
   auto pat = deserialize(str.substr(d2 + 1), static_cast<int*>(nullptr));
-  if (!maj.isOk() || !min.isOk() || !pat.isOk()) {
-    return err<tests::SemVer>("Invalid SemVer components");
+  if (!maj.has_value() || !min.has_value() || !pat.has_value()) {
+    return etched::err(RuntimeError{"Invalid SemVer components"});
   }
-  return ok(tests::SemVer{
-      .major = maj.unwrap(), .minor = min.unwrap(), .patch = pat.unwrap()});
+  return tests::SemVer{
+      .major = maj.value(), .minor = min.value(), .patch = pat.value()};
 }
 
 }  // namespace etched
@@ -154,7 +153,7 @@ inline void lexerLongClusterWithValueTransitionTest() {
 
   const char* expected[] = {"a", "b", "c", "d", "e"};  //NOLINT
   for (int i = 0; i < 5; ++i) {
-    auto tok = lexer.nextToken().unwrap();
+    auto tok = lexer.nextToken().value();
     if (tok.type != detail::TokenType::SHORT_OPTION) {
       std::fprintf(stderr, "Token %d: expected SHORT_OPTION, got %d\n", i,
                    static_cast<int>(tok.type));
@@ -168,7 +167,7 @@ inline void lexerLongClusterWithValueTransitionTest() {
     }
   }
 
-  auto endTok = lexer.nextToken().unwrap();
+  auto endTok = lexer.nextToken().value();
   if (endTok.type != detail::TokenType::END_OF_INPUT) {
     throw "Expected END_OF_INPUT after cluster";
   }
@@ -180,23 +179,23 @@ inline void lexerMultipleSeparatorsTest() {
   const char* argv[] = {"prog", "--", "--", "-x", "--option"};
   lexer.setTokens(5, argv);
 
-  auto sep = lexer.nextToken().unwrap();
+  auto sep = lexer.nextToken().value();
   if (sep.type != detail::TokenType::SEPARATOR) {
     throw "First -- should be SEPARATOR";
   }
 
   // After separator, everything is positional
-  auto pos1 = lexer.nextToken().unwrap();
+  auto pos1 = lexer.nextToken().value();
   if (pos1.type != detail::TokenType::POSITIONAL || pos1.value != "--") {
     throw "Second -- should be POSITIONAL '--'";
   }
 
-  auto pos2 = lexer.nextToken().unwrap();
+  auto pos2 = lexer.nextToken().value();
   if (pos2.type != detail::TokenType::POSITIONAL || pos2.value != "-x") {
     throw "-x after separator should be POSITIONAL";
   }
 
-  auto pos3 = lexer.nextToken().unwrap();
+  auto pos3 = lexer.nextToken().value();
   if (pos3.type != detail::TokenType::POSITIONAL || pos3.value != "--option") {
     throw "--option after separator should be POSITIONAL";
   }
@@ -207,12 +206,12 @@ inline void lexerEqualsWithEmptyValueTest() {
   const char* argv[] = {"prog", "--name="};
   lexer.setTokens(2, argv);
 
-  auto opt = lexer.nextToken().unwrap();
+  auto opt = lexer.nextToken().value();
   if (opt.type != detail::TokenType::LONG_OPTION || opt.value != "name") {
     throw "Should parse --name= as LONG_OPTION 'name'";
   }
 
-  auto val = lexer.nextToken().unwrap();
+  auto val = lexer.nextToken().value();
   if (val.type != detail::TokenType::POSITIONAL) {
     throw "Empty value after = should be POSITIONAL";
   }
@@ -229,12 +228,12 @@ inline void lexerEqualsWithMultipleEqualsTest() {
   const char* argv[] = {"prog", "--equation=x=y+z"};
   lexer.setTokens(2, argv);
 
-  auto opt = lexer.nextToken().unwrap();
+  auto opt = lexer.nextToken().value();
   if (opt.type != detail::TokenType::LONG_OPTION || opt.value != "equation") {
     throw "Should parse key as 'equation'";
   }
 
-  auto val = lexer.nextToken().unwrap();
+  auto val = lexer.nextToken().value();
   if (val.type != detail::TokenType::POSITIONAL || val.value != "x=y+z") {
     std::fprintf(stderr, "Got: '%.*s'\n", static_cast<int>(val.value.size()),
                  val.value.data());
@@ -249,32 +248,32 @@ inline void lexerMixedClusterAndLongOptionsTest() {
 
   // First cluster: a, b, c
   for (const char* c : {"a", "b", "c"}) {
-    auto tok = lexer.nextToken().unwrap();
+    auto tok = lexer.nextToken().value();
     if (tok.type != detail::TokenType::SHORT_OPTION || tok.value != c) {
       throw "Cluster -abc parsing failed";
     }
   }
 
   // --verbose
-  auto verb = lexer.nextToken().unwrap();
+  auto verb = lexer.nextToken().value();
   if (verb.type != detail::TokenType::LONG_OPTION || verb.value != "verbose") {
     throw "--verbose parsing failed";
   }
 
   // Second cluster: x, y, z
   for (const char* c : {"x", "y", "z"}) {
-    auto tok = lexer.nextToken().unwrap();
+    auto tok = lexer.nextToken().value();
     if (tok.type != detail::TokenType::SHORT_OPTION || tok.value != c) {
       throw "Cluster -xyz parsing failed";
     }
   }
 
   // --name=test
-  auto name = lexer.nextToken().unwrap();
+  auto name = lexer.nextToken().value();
   if (name.type != detail::TokenType::LONG_OPTION || name.value != "name") {
     throw "--name parsing failed";
   }
-  auto val = lexer.nextToken().unwrap();
+  auto val = lexer.nextToken().value();
   if (val.type != detail::TokenType::POSITIONAL || val.value != "test") {
     throw "test value parsing failed";
   }
@@ -287,7 +286,7 @@ inline void lexerVeryLongOptionNameTest() {
   const char* argv[] = {"prog", longOpt};
   lexer.setTokens(2, argv);
 
-  auto tok = lexer.nextToken().unwrap();
+  auto tok = lexer.nextToken().value();
   if (tok.type != detail::TokenType::LONG_OPTION) {
     throw "Long option name should be parsed as LONG_OPTION";
   }
@@ -302,7 +301,7 @@ inline void lexerSingleDashAloneTest() {
   const char* argv[] = {"prog", "-"};
   lexer.setTokens(2, argv);
 
-  auto tok = lexer.nextToken().unwrap();
+  auto tok = lexer.nextToken().value();
   // Single dash is typically a positional (stdin placeholder)
   if (tok.type != detail::TokenType::POSITIONAL || tok.value != "-") {
     throw "Single dash should be POSITIONAL '-'";
@@ -317,7 +316,7 @@ inline void integerOverflowTest() {
   // Test that parsing a number too large for int32 fails
   auto result = deserialize("2147483648",
                             static_cast<int32_t*>(nullptr));  // INT32_MAX + 1
-  if (result.isOk()) {
+  if (result.has_value()) {
     throw "Should fail on int32 overflow";
   }
 }
@@ -325,7 +324,7 @@ inline void integerOverflowTest() {
 inline void integerUnderflowTest() {
   auto result = deserialize("-2147483649",
                             static_cast<int32_t*>(nullptr));  // INT32_MIN - 1
-  if (result.isOk()) {
+  if (result.has_value()) {
     throw "Should fail on int32 underflow";
   }
 }
@@ -333,37 +332,37 @@ inline void integerUnderflowTest() {
 inline void integerExactBoundariesTest() {
   // INT32_MAX
   auto maxRes = deserialize("2147483647", static_cast<int32_t*>(nullptr));
-  if (!maxRes.isOk() || maxRes.unwrap() != 2147483647) {
+  if (!maxRes.has_value() || maxRes.value() != 2147483647) {
     throw "Should parse INT32_MAX correctly";
   }
 
   // INT32_MIN
   auto minRes = deserialize("-2147483648", static_cast<int32_t*>(nullptr));
-  if (!minRes.isOk() || minRes.unwrap() != -2147483648) {
+  if (!minRes.has_value() || minRes.value() != -2147483648) {
     throw "Should parse INT32_MIN correctly";
   }
 }
 
 inline void unsignedIntegerNegativeTest() {
   auto result = deserialize("-1", static_cast<uint32_t*>(nullptr));
-  if (result.isOk()) {
+  if (result.has_value()) {
     throw "Unsigned should not accept negative";
   }
 }
 
 inline void int8BoundaryTest() {
   auto maxRes = deserialize("127", static_cast<int8_t*>(nullptr));
-  if (!maxRes.isOk() || maxRes.unwrap() != 127) {
+  if (!maxRes.has_value() || maxRes.value() != 127) {
     throw "Should parse INT8_MAX";
   }
 
   auto overRes = deserialize("128", static_cast<int8_t*>(nullptr));
-  if (overRes.isOk()) {
+  if (overRes.has_value()) {
     throw "Should fail on int8 overflow";
   }
 
   auto minRes = deserialize("-128", static_cast<int8_t*>(nullptr));
-  if (!minRes.isOk() || minRes.unwrap() != -128) {
+  if (!minRes.has_value() || minRes.value() != -128) {
     throw "Should parse INT8_MIN";
   }
 }
@@ -372,32 +371,32 @@ inline void uint64LargeBoundaryTest() {
   // UINT64_MAX = 18446744073709551615
   auto maxRes =
       deserialize("18446744073709551615", static_cast<uint64_t*>(nullptr));
-  if (!maxRes.isOk() || maxRes.unwrap() != 18446744073709551615ULL) {
+  if (!maxRes.has_value() || maxRes.value() != 18446744073709551615ULL) {
     throw "Should parse UINT64_MAX";
   }
 
   auto overRes =
       deserialize("18446744073709551616", static_cast<uint64_t*>(nullptr));
-  if (overRes.isOk()) {
+  if (overRes.has_value()) {
     throw "Should fail on uint64 overflow";
   }
 }
 
 inline void integerLeadingZerosTest() {
   auto res = deserialize("007", static_cast<int*>(nullptr));
-  if (!res.isOk() || res.unwrap() != 7) {
+  if (!res.has_value() || res.value() != 7) {
     throw "Leading zeros should parse as decimal 7";
   }
 }
 
 inline void integerExtraCharactersTest() {
   auto res = deserialize("123abc", static_cast<int*>(nullptr));
-  if (res.isOk()) {
+  if (res.has_value()) {
     throw "Extra characters should cause failure";
   }
 
   auto res2 = deserialize("123 ", static_cast<int*>(nullptr));
-  if (res2.isOk()) {
+  if (res2.has_value()) {
     throw "Trailing space should cause failure";
   }
 }
@@ -408,10 +407,10 @@ inline void integerExtraCharactersTest() {
 
 inline void floatScientificNotationTest() {
   auto res = deserialize("1.5e10", static_cast<double*>(nullptr));
-  if (!res.isOk()) {
+  if (!res.has_value()) {
     throw "Should parse scientific notation";
   }
-  double val = res.unwrap();
+  double val = res.value();
   if (std::abs(val - 1.5e10) > 1.0) {
     throw "Scientific notation value incorrect";
   }
@@ -419,10 +418,10 @@ inline void floatScientificNotationTest() {
 
 inline void floatNegativeExponentTest() {
   auto res = deserialize("3.14e-5", static_cast<double*>(nullptr));
-  if (!res.isOk()) {
+  if (!res.has_value()) {
     throw "Should parse negative exponent";
   }
-  double val = res.unwrap();
+  double val = res.value();
   if (std::abs(val - 3.14e-5) > 1e-10) {
     throw "Negative exponent value incorrect";
   }
@@ -430,7 +429,7 @@ inline void floatNegativeExponentTest() {
 
 inline void floatVerySmallTest() {
   auto res = deserialize("0.0000000001", static_cast<double*>(nullptr));
-  if (!res.isOk()) {
+  if (!res.has_value()) {
     throw "Should parse very small float";
   }
 }
@@ -438,24 +437,24 @@ inline void floatVerySmallTest() {
 inline void floatVeryLargeTest() {
   auto res =
       deserialize("1.7976931348623157e+308", static_cast<double*>(nullptr));
-  if (!res.isOk()) {
+  if (!res.has_value()) {
     throw "Should parse near DBL_MAX";
   }
 }
 
 inline void floatNegativeZeroTest() {
   auto res = deserialize("-0.0", static_cast<double*>(nullptr));
-  if (!res.isOk()) {
+  if (!res.has_value()) {
     throw "Should parse negative zero";
   }
 }
 
 inline void floatPrecisionTest() {
   auto res = deserialize("3.141592653589793", static_cast<double*>(nullptr));
-  if (!res.isOk()) {
+  if (!res.has_value()) {
     throw "Should parse pi";
   }
-  double val = res.unwrap();
+  double val = res.value();
   if (std::abs(val - 3.141592653589793) > 1e-15) {
     throw "Pi precision lost";
   }
@@ -468,40 +467,40 @@ inline void floatPrecisionTest() {
 inline void booleanCaseSensitivityTest() {
   // These should fail - only exact case matches
   auto res1 = deserialize("True", static_cast<bool*>(nullptr));
-  if (res1.isOk())
+  if (res1.has_value())
     throw "True (mixed case) should not be valid";
 
   auto res2 = deserialize("TRUE", static_cast<bool*>(nullptr));
-  if (res2.isOk())
+  if (res2.has_value())
     throw "TRUE (upper case) should not be valid";
 
   auto res3 = deserialize("False", static_cast<bool*>(nullptr));
-  if (res3.isOk())
+  if (res3.has_value())
     throw "False (mixed case) should not be valid";
 
   auto res4 = deserialize("FALSE", static_cast<bool*>(nullptr));
-  if (res4.isOk())
+  if (res4.has_value())
     throw "FALSE (upper case) should not be valid";
 
   // Some implementations are case-insensitive, adjust test based on actual behavior
   // For now, we test the explicit accepted values
   auto onRes = deserialize("ON", static_cast<bool*>(nullptr));
-  if (!onRes.isOk() || !onRes.unwrap()) {
+  if (!onRes.has_value() || !onRes.value()) {
     throw "ON should be true";
   }
 
   auto offRes = deserialize("OFF", static_cast<bool*>(nullptr));
-  if (!offRes.isOk() || offRes.unwrap()) {
+  if (!offRes.has_value() || offRes.value()) {
     throw "OFF should be false";
   }
 
   auto oneRes = deserialize("1", static_cast<bool*>(nullptr));
-  if (!oneRes.isOk() || !oneRes.unwrap()) {
+  if (!oneRes.has_value() || !oneRes.value()) {
     throw "1 should be true";
   }
 
   auto zeroRes = deserialize("0", static_cast<bool*>(nullptr));
-  if (!zeroRes.isOk() || zeroRes.unwrap()) {
+  if (!zeroRes.has_value() || zeroRes.value()) {
     throw "0 should be false";
   }
 }
@@ -511,7 +510,7 @@ inline void booleanInvalidValuesTest() {
                             "f",   "2",  "-1", "truee", ""};
   for (const char* val : invalids) {
     auto res = deserialize(val, static_cast<bool*>(nullptr));
-    if (res.isOk()) {
+    if (res.has_value()) {
       std::fprintf(stderr, "'%s' should not be valid bool\n", val);
       throw "Invalid boolean accepted";
     }
@@ -541,8 +540,8 @@ inline void parserManyOptionsTest() {
                         "-v",   "--name", "test", "-8",        "800"};
   auto result = parser.parse(10, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Many options parsing failed";
   }
 
@@ -572,7 +571,7 @@ inline void parserRepeatedOptionOverwriteTest() {
   const char* argv[] = {"prog", "-p", "3000", "--port", "4000", "-p", "5000"};
   auto result = parser.parse(7, argv);
 
-  if (!result.isOk()) {
+  if (!result.has_value()) {
     throw "Repeated option parsing failed";
   }
 
@@ -592,7 +591,7 @@ inline void parserInterleavedOptionsTest() {
                         "-c",   "3",  "--alpha", "10"};
   auto result = parser.parse(9, argv);
 
-  if (!result.isOk())
+  if (!result.has_value())
     throw "Interleaved parsing failed";
   if (parser.get<"a">().value() != 10)
     throw "Alpha should be 10 (last)";
@@ -611,8 +610,8 @@ inline void parserLongOptionEqualsFormTest() {
   const char* argv[] = {"prog", "--port=9000", "--host=example.com"};
   auto result = parser.parse(3, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Equals form parsing failed";
   }
 
@@ -629,7 +628,7 @@ inline void parserMissingRequiredValueTest() {
   const char* argv[] = {"prog", "-p"};  // Missing value
   auto result = parser.parse(2, argv);
 
-  if (result.isOk()) {
+  if (result.has_value()) {
     throw "Should fail when value missing";
   }
 }
@@ -642,7 +641,7 @@ inline void parserOnlyLongNameTest() {
   const char* argv[] = {"prog", "--count", "42"};
   auto result = parser.parse(3, argv);
 
-  if (!result.isOk())
+  if (!result.has_value())
     throw "Long-only option failed";
   if (parser.get<"count">().value() != 42)
     throw "Count wrong";
@@ -655,7 +654,7 @@ inline void parserOnlyShortNameTest() {
   const char* argv[] = {"prog", "-n", "99"};
   auto result = parser.parse(3, argv);
 
-  if (!result.isOk())
+  if (!result.has_value())
     throw "Short-only option failed";
   if (parser.get<"num">().value() != 99)
     throw "Number wrong";
@@ -674,8 +673,8 @@ inline void customVector3DTest() {
   const char* argv[] = {"prog", "-v", "1.5,2.5,3.5"};
   auto result = parser.parse(3, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Vector3D parsing failed";
   }
 
@@ -694,8 +693,8 @@ inline void customIPAddressTest() {
   const char* argv[] = {"prog", "-i", "192.168.1.100"};
   auto result = parser.parse(3, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "IP parsing failed";
   }
 
@@ -708,15 +707,15 @@ inline void customIPAddressTest() {
 
 inline void customIPAddressInvalidTest() {
   auto res = deserialize("256.1.2.3", static_cast<IPAddress*>(nullptr));
-  if (res.isOk())
+  if (res.has_value())
     throw "Should reject octet > 255";
 
   auto res2 = deserialize("1.2.3", static_cast<IPAddress*>(nullptr));
-  if (res2.isOk())
+  if (res2.has_value())
     throw "Should reject 3 octets";
 
   auto res3 = deserialize("-1.2.3.4", static_cast<IPAddress*>(nullptr));
-  if (res3.isOk())
+  if (res3.has_value())
     throw "Should reject negative octet";
 }
 
@@ -729,8 +728,8 @@ inline void customTimeRangeTest() {
   const char* argv[] = {"prog", "-t", "08:30-18:45"};
   auto result = parser.parse(3, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "TimeRange parsing failed";
   }
 
@@ -750,7 +749,7 @@ inline void customSemVerTest() {
   const char* argv[] = {"prog", "-V", "2.15.3"};
   auto result = parser.parse(3, argv);
 
-  if (!result.isOk())
+  if (!result.has_value())
     throw "SemVer parsing failed";
 
   auto v = parser.get<"version">().value();
@@ -774,8 +773,8 @@ inline void multipleCustomTypesTest() {
                         "-V",   "3.2.1", "-P",       "9999"};
   auto result = parser.parse(9, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Multiple custom types failed";
   }
 
@@ -813,8 +812,8 @@ inline void commandWithManyOptionsTest() {
                         "5",    "--dry-run", "--image", "v2.0.0"};
   auto result = parser.parse(9, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Deploy command failed";
   }
 
@@ -845,7 +844,7 @@ inline void multipleCommandsTest() {
   const char* argv1[] = {"prog", "start", "-p", "3000"};
   auto p1 = parser;
   auto r1 = p1.parse(4, argv1);
-  if (!r1.isOk())
+  if (!r1.has_value())
     throw "start command failed";
   if (!p1.has<"start">())
     throw "start command not matched";
@@ -857,7 +856,7 @@ inline void multipleCommandsTest() {
   const char* argv2[] = {"prog", "stop", "--force"};
   auto p2 = parser;
   auto r2 = p2.parse(3, argv2);
-  if (!r2.isOk())
+  if (!r2.has_value())
     throw "stop command failed";
   if (!p2.has<"stop">())
     throw "stop command not matched";
@@ -869,7 +868,7 @@ inline void multipleCommandsTest() {
   const char* argv3[] = {"prog", "status"};
   auto p3 = parser;
   auto r3 = p3.parse(2, argv3);
-  if (!r3.isOk())
+  if (!r3.has_value())
     throw "status command failed";
   if (!p3.has<"status">())
     throw "status command not matched";
@@ -886,8 +885,8 @@ inline void commandWithCustomTypeTest() {
   const char* argv[] = {"prog", "connect", "-H", "192.168.0.1", "-p", "2222"};
   auto result = parser.parse(6, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Connect command failed";
   }
 

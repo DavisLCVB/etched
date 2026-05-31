@@ -9,8 +9,8 @@ auto main(int argc, const char* argv[]) -> int {
                      optString<"name">('n', "name", "Your name", "Guest"),
                      optBool<"v">('v', "verbose", "Verbose mode"));
 
-  if (auto result = parser.parse(argc, argv); !result.isOk()) {
-    result.unwrapErr().print();
+  if (auto result = parser.parse(argc, argv); !result.has_value()) {
+    result.error().print();
     return 1;
   }
 

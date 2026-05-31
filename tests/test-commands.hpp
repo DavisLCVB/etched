@@ -14,8 +14,8 @@ inline void commandBasicTest() {
   const char* argv[] = {"prog", "init", "--name", "testproject"};
   auto result = parser.parse(4, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Command parsing should succeed";
   }
 
@@ -38,8 +38,8 @@ inline void commandWithSubOptionsTest() {
   const char* argv[] = {"prog", "serve", "-p", "3000", "--host", "0.0.0.0"};
   auto result = parser.parse(6, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Command with options should succeed";
   }
 
@@ -64,8 +64,8 @@ inline void commandDefaultValuesTest() {
   const char* argv[] = {"prog", "run"};
   auto result = parser.parse(2, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Command with defaults should succeed";
   }
 
@@ -89,12 +89,12 @@ inline void commandHelpTest() {
   
   auto result = parser.parse(3, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Command help parsing should succeed";
   }
 
-  if (!result.unwrap().shouldExit) {
+  if (!result.value().shouldExit) {
     throw "Command help should signal exit";
   }
 

@@ -11,9 +11,9 @@ inline bool parserCalled = false;
 
 struct TraceParser {
     template <typename Lexer, typename SymbolTable, typename JumpTable, typename Tuple>
-    static auto parse(Lexer&, const SymbolTable&, const JumpTable&, Tuple&) -> Result<Output> {
+    static auto parse(Lexer&, const SymbolTable&, const JumpTable&, Tuple&) -> Expected<Output, RuntimeError> {
         parserCalled = true;
-        return ok(Output{.success = true, .shouldExit = false});
+        return Output{.success = true, .shouldExit = false};
     }
 };
 
@@ -40,13 +40,13 @@ struct MockLexer {
 
     void setTokens(int, const char**) {}
 
-    auto nextToken(etched::detail::ParsingContext = etched::detail::ParsingContext::DEFAULT) -> Result<etched::detail::Token> {
+    auto nextToken(etched::detail::ParsingContext = etched::detail::ParsingContext::DEFAULT) -> Expected<etched::detail::Token, RuntimeError> {
         if (currentIdx >= mockTokens.size()) {
             lastToken = { "", TokenType::END_OF_INPUT };
-            return ok(lastToken);
+            return lastToken;
         }
         lastToken = mockTokens[currentIdx++];
-        return ok(lastToken);
+        return lastToken;
     }
 
     auto currentToken() const -> etched::detail::Token {
@@ -56,8 +56,8 @@ struct MockLexer {
 
 struct DummyParser {
     template <typename Lexer, typename SymbolTable, typename JumpTable, typename Tuple>
-    static auto parse(Lexer&, const SymbolTable&, const JumpTable&, Tuple&) -> Result<Output> {
-        return ok(Output{.success = true, .shouldExit = false});
+    static auto parse(Lexer&, const SymbolTable&, const JumpTable&, Tuple&) -> Expected<Output, RuntimeError> {
+        return Output{.success = true, .shouldExit = false};
     }
 };
 
@@ -82,7 +82,7 @@ inline void customParserReplacementTest() {
     parserCalled = false;
     auto result = parser.parse(1, argv);
 
-    if (!result.isOk()) throw "Custom parser failed";
+    if (!result.has_value()) throw "Custom parser failed";
     if (!parserCalled) throw "Custom parser was not called";
 }
 
@@ -95,7 +95,7 @@ inline void customLexerReplacementTest() {
     const char* argv[] = {"prog"};
     auto result = parser.parse(1, argv);
 
-    if (!result.isOk()) throw "Custom lexer config failed";
+    if (!result.has_value()) throw "Custom lexer config failed";
 }
 
 inline void runComponentReplacementTests() {

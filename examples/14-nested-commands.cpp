@@ -18,12 +18,12 @@ auto main(int argc, const char* argv[]) -> int {
 
   auto result = parser.parse(argc, argv);
 
-  if (result.isOk() && result.unwrap().shouldExit) {
+  if (result.has_value() && result.value().shouldExit) {
     return 0;
   }
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     return 1;
   }
 
@@ -31,8 +31,8 @@ auto main(int argc, const char* argv[]) -> int {
     const auto& remote = parser.get<"remote">();
     if (remote.has<"add">()) {
       const auto& add = remote.get<"add">();
-      auto name = add.get<"name">().valueOr("origin");
-      auto url = add.get<"url">().valueOr("unknown");
+      auto name = add.get<"name">().value_or("origin");
+      auto url = add.get<"url">().value_or("unknown");
       std::cout << "Adding remote '" << name << "' with URL: " << url << "\n";
     } else if (remote.has<"list">()) {
       std::cout << "Listing remotes...\n";

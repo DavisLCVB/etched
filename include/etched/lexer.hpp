@@ -33,11 +33,11 @@ class DefaultLexer {
   [[nodiscard]] auto currentToken() const -> Token { return lastToken_; }
 
   [[nodiscard]] auto nextToken(ParsingContext ctx = ParsingContext::DEFAULT)
-      -> Result<Token> {
+      -> Expected<Token, RuntimeError> {
     if (escaped_) {
       if (currentIndex_ >= argc_) {
         lastToken_ = Token{.value = "", .type = TokenType::END_OF_INPUT};
-        return ok(lastToken_);
+        return lastToken_;
       }
       std::string_view token = tokens_[currentIndex_];
       return handlePositional(token, ctx);
@@ -47,7 +47,7 @@ class DefaultLexer {
     }
     if (currentIndex_ >= argc_) {
       lastToken_ = Token{.value = "", .type = TokenType::END_OF_INPUT};
-      return ok(lastToken_);
+      return lastToken_;
     }
     std::string_view token = tokens_[currentIndex_];
     if (token == "--") {
@@ -74,18 +74,18 @@ class DefaultLexer {
 
  protected:
   auto handlePositional(std::string_view token,
-                        [[maybe_unused]] ParsingContext ctx) -> Result<Token> {
+                        [[maybe_unused]] ParsingContext ctx) -> Expected<Token, RuntimeError> {
     lastToken_ = Token{.value = token, .type = TokenType::POSITIONAL};
     currentIndex_++;
-    return ok(lastToken_);
+    return lastToken_;
   }
 
-  auto handleRemaining(ParsingContext ctx) -> Result<Token> {
+  auto handleRemaining(ParsingContext ctx) -> Expected<Token, RuntimeError> {
     if (remaining_.type == RemainingType::LONG) {
       auto value = remaining_.value;
       remaining_ = Remaining{};
       lastToken_ = Token{value, TokenType::POSITIONAL};
-      return ok(lastToken_);
+      return lastToken_;
     }
     if (remaining_.type == RemainingType::SHORT) {
       if (ctx == ParsingContext::WAITING_FOR_VALUE) {
@@ -93,7 +93,7 @@ class DefaultLexer {
         remaining_ = Remaining{};
         currentIndex_++;
         lastToken_ = Token{value, TokenType::POSITIONAL};
-        return ok(lastToken_);
+        return lastToken_;
       }
       auto value = remaining_.value.substr(0, 1);
       if (remaining_.value.size() > 1) {
@@ -103,21 +103,21 @@ class DefaultLexer {
         currentIndex_++;
       }
       lastToken_ = Token{value, TokenType::SHORT_OPTION};
-      return ok(lastToken_);
+      return lastToken_;
     }
     lastToken_ = Token{.value = "", .type = TokenType::END_OF_INPUT};
-    return ok(lastToken_);
+    return lastToken_;
   }
 
-  auto handleSeparator([[maybe_unused]] ParsingContext ctx) -> Result<Token> {
+  auto handleSeparator([[maybe_unused]] ParsingContext ctx) -> Expected<Token, RuntimeError> {
     escaped_ = true;
     ++currentIndex_;
     lastToken_ = Token{.value = "--", .type = TokenType::SEPARATOR};
-    return ok(lastToken_);
+    return lastToken_;
   }
 
   auto handleLongOption(std::string_view token,
-                        [[maybe_unused]] ParsingContext ctx) -> Result<Token> {
+                        [[maybe_unused]] ParsingContext ctx) -> Expected<Token, RuntimeError> {
     size_t equalPos = token.find('=');
     if (equalPos != std::string_view::npos) {
       lastToken_ = Token{.value = token.substr(2, equalPos - 2),
@@ -129,24 +129,24 @@ class DefaultLexer {
     }
     currentIndex_++;
     if (ctx == ParsingContext::DEFAULT) {
-      return ok(lastToken_);
+      return lastToken_;
     }
     if (ctx == ParsingContext::WAITING_FOR_VALUE) {
       if constexpr (!Config::prefferValues) {
-        return err<Token>("Passing long option as value is not allowed");
+        return etched::err(RuntimeError{"Passing long option as value is not allowed"});
       }
       auto value = lastToken_.value;
       lastToken_ = Token{.value = value, .type = TokenType::POSITIONAL};
-      return ok(lastToken_);
+      return lastToken_;
     }
-    return err<Token>("Invalid context for long option");
+    return etched::err(RuntimeError{"Invalid context for long option"});
   }
 
   auto handleShortOption(std::string_view token, ParsingContext ctx)
-      -> Result<Token> {
+      -> Expected<Token, RuntimeError> {
     if (token.size() > 2) {
       if constexpr (!Config::allowClusters) {
-        return err<Token>("Clustered short options are not allowed");
+        return etched::err(RuntimeError{"Clustered short options are not allowed"});
       }
       lastToken_ =
           Token{.value = token.substr(1, 1), .type = TokenType::SHORT_OPTION};
@@ -157,17 +157,17 @@ class DefaultLexer {
       currentIndex_++;
     }
     if (ctx == ParsingContext::DEFAULT) {
-      return ok(lastToken_);
+      return lastToken_;
     }
     if (ctx == ParsingContext::WAITING_FOR_VALUE) {
       if constexpr (!Config::prefferValues) {
-        return err<Token>("Passing short option as value is not allowed");
+        return etched::err(RuntimeError{"Passing short option as value is not allowed"});
       }
       auto value = lastToken_.value;
       lastToken_ = Token{.value = value, .type = TokenType::POSITIONAL};
-      return ok(lastToken_);
+      return lastToken_;
     }
-    return err<Token>("Invalid context for short option");
+    return etched::err(RuntimeError{"Invalid context for short option"});
   }
 
  private:

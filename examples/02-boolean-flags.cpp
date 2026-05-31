@@ -11,12 +11,12 @@ auto main(int argc, const char* argv[]) -> int {  // NOLINT
 
   auto result = parser.parse(argc, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     return 1;
   }
 
-  if (parser.get<"verbose">().valueOr(false)) {
+  if (parser.get<"verbose">().value_or(false)) {
     std::cout << "Verbose mode enabled\n";
   }
 
@@ -25,7 +25,7 @@ auto main(int argc, const char* argv[]) -> int {  // NOLINT
     std::cout << "Verbose flag is present\n";
   }
 
-  if (parser.get<"debug">().valueOr(false)) {
+  if (parser.get<"debug">().value_or(false)) {
     std::cout << "Debug mode enabled\n";
   }
 

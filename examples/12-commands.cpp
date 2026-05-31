@@ -29,12 +29,12 @@ auto main(int argc, const char* argv[]) -> int {  // NOLINT
 
   auto result = parser.parse(argc, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     return 1;
   }
 
-  if (result.unwrap().shouldExit) {
+  if (result.value().shouldExit) {
     return 0;
   }
 

@@ -16,7 +16,7 @@ inline void errorMissingValueTest() {
   const char* argv[] = {"prog", "--port"};
   auto result = parser.parse(2, argv);
 
-  if (result.isOk()) {
+  if (result.has_value()) {
     throw "Should fail when value is missing for long option";
   }
 }
@@ -28,7 +28,7 @@ inline void errorInvalidIntTest() {
   const char* argv[] = {"prog", "-p", "abc"};
   auto result = parser.parse(3, argv);
 
-  if (result.isOk()) {
+  if (result.has_value()) {
     throw "Should fail when value is not a valid integer";
   }
 }
@@ -40,7 +40,7 @@ inline void errorUnknownOptionTest() {
   const char* argv[] = {"prog", "--unknown"};
   auto result = parser.parse(2, argv);
 
-  if (result.isOk()) {
+  if (result.has_value()) {
     throw "Should fail when an unknown option is provided";
   }
 }
@@ -52,7 +52,7 @@ inline void errorExceedMaxArgsTest() {
   const char* argv[] = {"prog", "-v", "-v", "-v"};
   auto result = parser.parse(4, argv);
 
-  if (result.isOk()) {
+  if (result.has_value()) {
     throw "Should fail when exceeding maxArgs";
   }
 }
@@ -64,7 +64,7 @@ inline void errorMissingSubcommandTest() {
   const char* argv[] = {"prog"};
   auto result = parser.parse(1, argv);
 
-  if (!result.isOk()) {
+  if (!result.has_value()) {
     throw "Parser should be OK even if no command is provided (default behavior)";
   }
 }
@@ -76,7 +76,7 @@ inline void errorUnexpectedPositionalTest() {
   const char* argv[] = {"prog", "unexpected"};
   auto result = parser.parse(2, argv);
 
-  if (result.isOk()) {
+  if (result.has_value()) {
     throw "Should fail when an unexpected positional argument is provided";
   }
 }
