@@ -8,6 +8,7 @@
 #include <type_traits>
 
 #include "types.hpp"
+#include "utils/optional.hpp"
 
 namespace etched::detail {
 /**
@@ -173,10 +174,7 @@ struct EntryMetadata {
 /**
  * @brief Parsing context to influence token interpretation.
  */
-enum class ParsingContext : uint8_t {
-  DEFAULT,
-  WAITING_FOR_VALUE
-};
+enum class ParsingContext : uint8_t { DEFAULT, WAITING_FOR_VALUE };
 
 /**
  * @brief Concept for lexers.

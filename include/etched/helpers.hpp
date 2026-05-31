@@ -32,7 +32,7 @@ constexpr const char* noDesc = "";
  * @tparam T The type of the value.
  */
 template <typename T>
-constexpr auto noDefault = etched::none<T>();
+constexpr auto noDefault = etched::none;
 
 // --- Generic Options ---
 
@@ -78,7 +78,7 @@ template <typename T, detail::String Tag>
       .shortName = shortName,
       .longName = detail::stripDashes(longName),
       .description = description,
-      .defaultValue = none<T>(),
+      .defaultValue = none,
       .callback = NoCallbackType{}};
 }
 

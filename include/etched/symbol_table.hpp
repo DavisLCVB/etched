@@ -10,6 +10,7 @@
 #include "contracts.hpp"
 #include "strings.hpp"
 #include "types.hpp"
+#include "utils/optional.hpp"
 
 namespace etched::detail {
 
@@ -62,7 +63,7 @@ struct PerfectSymbolTable {
   [[nodiscard]] constexpr auto find(std::string_view key) const
       -> Optional<EntryMetadata> {
     if constexpr (Capacity == 0) {
-      return none<EntryMetadata>();
+      return none;
     }
     uint32_t h = HashType::salted(key, salt);
     const auto& entry = table[h % Capacity];
@@ -70,7 +71,7 @@ struct PerfectSymbolTable {
     if (entry.occupied && entry.key == key) {
       return some(entry.metadata);
     }
-    return none<EntryMetadata>();
+    return none;
   }
 
   consteval auto insert(std::string_view key, EntryMetadata metadata) -> bool {
@@ -119,7 +120,8 @@ struct PerfectSymbolTable {
 
     auto collect =
         [&]<size_t... Is>(std::index_sequence<Is...>) -> auto {  // NOLINT
-      [[maybe_unused]] auto processOption = [&](auto i, const auto& opt) -> auto {
+      [[maybe_unused]] auto processOption = [&](auto i,
+                                                const auto& opt) -> auto {
         using OptType = std::decay_t<decltype(opt)>;
         auto addKey = [&](std::string_view k, EntryType type) -> auto {
           if (keyCount < maxKeysLimit) {
@@ -128,7 +130,7 @@ struct PerfectSymbolTable {
         };
 
         if constexpr (IsPositionalOption<OptType>) {
-          if (st.positionalIndex_.hasValue()) {
+          if (st.positionalIndex_.has_value()) {
             throw CompileError(
                 "Only one positional argument collector allowed");
           }

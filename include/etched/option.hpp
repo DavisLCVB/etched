@@ -54,7 +54,7 @@ struct PositionalOption {
 
   ValueType value;
   std::string_view description;
-  Optional<ValueType> defaultValue = none<ValueType>();
+  Optional<ValueType> defaultValue = none;
 
   char shortName = '\0';
   std::string_view longName;
