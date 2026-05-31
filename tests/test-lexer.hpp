@@ -11,17 +11,17 @@ inline void lexerBasicTest() {
   const char* argv[] = {"prog", "-p", "8080"};
   lexer.setTokens(3, argv);
 
-  auto tok1 = lexer.nextToken().unwrap();
+  auto tok1 = lexer.nextToken().value();
   if (tok1.type != detail::TokenType::SHORT_OPTION || tok1.value != "p") {
     throw "Expected SHORT_OPTION 'p'";
   }
 
-  auto tok2 = lexer.nextToken().unwrap();
+  auto tok2 = lexer.nextToken().value();
   if (tok2.type != detail::TokenType::POSITIONAL || tok2.value != "8080") {
     throw "Expected POSITIONAL '8080'";
   }
 
-  auto tok3 = lexer.nextToken().unwrap();
+  auto tok3 = lexer.nextToken().value();
   if (tok3.type != detail::TokenType::END_OF_INPUT) {
     throw "Expected END_OF_INPUT";
   }
@@ -32,7 +32,7 @@ inline void lexerShortOptionTest() {
   const char* argv[] = {"prog", "-p", "8080"};
   lexer.setTokens(3, argv);
 
-  auto tok1 = lexer.nextToken().unwrap();
+  auto tok1 = lexer.nextToken().value();
   if (tok1.type != detail::TokenType::SHORT_OPTION || tok1.value != "p") {
     throw "Expected SHORT_OPTION 'p'";
   }
@@ -43,12 +43,12 @@ inline void lexerLongOptionWithEqualsTest() {
   const char* argv[] = {"prog", "--port=8080"};
   lexer.setTokens(2, argv);
 
-  auto tok1 = lexer.nextToken().unwrap();
+  auto tok1 = lexer.nextToken().value();
   if (tok1.type != detail::TokenType::LONG_OPTION || tok1.value != "port") {
     throw "Expected LONG_OPTION 'port'";
   }
 
-  auto tok2 = lexer.nextToken().unwrap();
+  auto tok2 = lexer.nextToken().value();
   if (tok2.type != detail::TokenType::POSITIONAL || tok2.value != "8080") {
     throw "Expected POSITIONAL '8080'";
   }
@@ -59,12 +59,12 @@ inline void lexerSeparatorTest() {
   const char* argv[] = {"prog", "--", "-p"};
   lexer.setTokens(3, argv);
 
-  auto tok1 = lexer.nextToken().unwrap();
+  auto tok1 = lexer.nextToken().value();
   if (tok1.type != detail::TokenType::SEPARATOR) {
     throw "Expected SEPARATOR";
   }
 
-  auto tok2 = lexer.nextToken().unwrap();
+  auto tok2 = lexer.nextToken().value();
   if (tok2.type != detail::TokenType::POSITIONAL || tok2.value != "-p") {
     throw "Expected POSITIONAL '-p'";
   }
@@ -75,13 +75,13 @@ inline void lexerClusterTest() {
   const char* argv[] = {"prog", "-abc"};
   lexer.setTokens(2, argv);
 
-  auto tok1 = lexer.nextToken().unwrap();
+  auto tok1 = lexer.nextToken().value();
   if (tok1.type != detail::TokenType::SHORT_OPTION || tok1.value != "a") throw "Cluster a failed";
   
-  auto tok2 = lexer.nextToken().unwrap();
+  auto tok2 = lexer.nextToken().value();
   if (tok2.type != detail::TokenType::SHORT_OPTION || tok2.value != "b") throw "Cluster b failed";
 
-  auto tok3 = lexer.nextToken().unwrap();
+  auto tok3 = lexer.nextToken().value();
   if (tok3.type != detail::TokenType::SHORT_OPTION || tok3.value != "c") throw "Cluster c failed";
 }
 
@@ -90,7 +90,7 @@ inline void lexerCurrentTokenTest() {
   const char* argv[] = {"prog", "-p"};
   lexer.setTokens(2, argv);
 
-  auto tok1 = lexer.nextToken().unwrap();
+  auto tok1 = lexer.nextToken().value();
   auto curr = lexer.currentToken();
   if (tok1.value != curr.value || tok1.type != curr.type) {
     throw "currentToken mismatch";

@@ -15,8 +15,8 @@ auto main(int argc, const char* argv[]) -> int {  // NOLINT
 
   auto result = parser.parse(argc, argv);
 
-  if (!result.isOk()) {
-    auto error = result.unwrapErr();
+  if (!result.has_value()) {
+    auto error = result.error();
     // The error message will indicate if the provided value is out of range.
     std::cerr << "Error: " << error.message() << "\n";
     return 1;

@@ -29,23 +29,23 @@ auto main(int argc, const char* argv[]) -> int {  // NOLINT
       optCallback<"greet">(
           'g', "greet", "Greet the user",
           [name]() -> void { std::cout << "Hello, " << name << "!\n"; }),
-      // Callbacks can also signal the parser to exit immediately after execution by returning an Result<Output> with shouldExit = true
+      // Callbacks can also signal the parser to exit immediately after execution by returning an Expected<Output, RuntimeError> with shouldExit = true
       optCallback<"terminate">('x', "exit", "Exit the application immediately",
-                               []() -> Result<Output> {
+                               []() -> Expected<Output, RuntimeError> {
                                  std::cout << "Terminating application...\n";
-                                 return ok(Output{.success = true,
-                                                  .shouldExit = true});
+                                 return Output{.success = true,
+                                               .shouldExit = true};
                                }),
       optHelp('h', "--help"));
 
   auto result = parser.parse(argc, argv);
   // If a callback signals to exit, we can check the result and exit early.
-  if (result.isOk() && result.unwrap().shouldExit) {
+  if (result.has_value() && result.value().shouldExit) {
     return 0;
   }
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     return 1;
   }
 

@@ -16,12 +16,12 @@ auto main(int argc, const char* argv[]) -> int {  // NOLINT
       optHelp('h', "myHelp"));
 
   auto result = parser.parse(argc, argv);
-  if (result.isOk() && result.unwrap().shouldExit) {
+  if (result.has_value() && result.value().shouldExit) {
     return 0;
   }
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     // Help always is generated. optHelp is only for assing a flag to trigger it.
     std::cout << parser.help() << "\n";
     return 1;

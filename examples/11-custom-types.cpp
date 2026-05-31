@@ -10,20 +10,20 @@ namespace etched {
 template <>
 // Custom deserialization for Point type
 auto deserialize(std::string_view str, [[maybe_unused]] Point* dummy)
-    -> Result<Point> {
+    -> Expected<Point, RuntimeError> {
   using namespace etched;
   std::cout << "Deserializing Point from: " << str << "\n";
   auto comma = str.find(',');
   if (comma == std::string_view::npos) {
-    return err<Point>("Point must be in format x,y");
+    return etched::err(RuntimeError{"Point must be in format x,y"});
   }
 
   try {
     double x = std::stod(std::string(str.substr(0, comma)));
     double y = std::stod(std::string(str.substr(comma + 1)));
-    return ok(Point{.x = x, .y = y});
+    return Point{.x = x, .y = y};
   } catch (...) {
-    return err<Point>("Invalid coordinates");
+    return etched::err(RuntimeError{"Invalid coordinates"});
   }
 }
 }  // namespace etched
@@ -37,8 +37,8 @@ auto main(int argc, const char* argv[]) -> int {  // NOLINT
 
   auto result = parser.parse(argc, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     return 1;
   }
 

@@ -46,10 +46,10 @@ class DefaultOrchestrator {
   }
 
   [[nodiscard]] auto parse(const int argc, const char* argv[])  //NOLINT
-      -> Result<Output> {                                       // NOLINT
+      -> Expected<Output, RuntimeError> {                       // NOLINT
     lexer_.setTokens(argc, argv);
     auto res = Parser::parse(lexer_, symbolTable_, jumpTable_, options_);
-    if (res.isOk() && res.unwrap().shouldExit) {
+    if (res.has_value() && res.value().shouldExit) {
       if constexpr (hasHelpOption()) {
         if (has<"help">()) {
           printHelp();
@@ -59,9 +59,9 @@ class DefaultOrchestrator {
     return res;
   }
 
-  [[nodiscard]] auto parseRecursive(Lexer& lexer) -> Result<Output> {
+  [[nodiscard]] auto parseRecursive(Lexer& lexer) -> Expected<Output, RuntimeError> {
     auto res = Parser::parse(lexer, symbolTable_, jumpTable_, options_);
-    if (res.isOk() && res.unwrap().shouldExit) {
+    if (res.has_value() && res.value().shouldExit) {
       if constexpr (hasHelpOption()) {
         if (has<"help">()) {
           printHelp();

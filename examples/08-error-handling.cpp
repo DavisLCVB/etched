@@ -13,9 +13,9 @@ auto main(int argc, const char* argv[]) -> int {  // NOLINT
   auto result = parser.parse(argc, argv);
 
   // Custom error handling
-  if (!result.isOk()) {
+  if (!result.has_value()) {
     std::cerr << "Custom error handling:\n";
-    auto error = result.unwrapErr();
+    auto error = result.error();
     std::cerr << "ExampleApp says: " << error.message() << "\n";
     return 1;
   }

@@ -15,71 +15,71 @@ constexpr int32_t conversionBase = 10;
 template <std::integral T>
   requires(!std::same_as<T, bool>)
 [[nodiscard]] auto deserialize(std::string_view str, [[maybe_unused]] T* dummy)
-    -> Result<T> {
+    -> Expected<T, RuntimeError> {
   T value;
   auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), value,
                                    conversionBase);
   if (ec == std::errc::invalid_argument) {
-    return err<T>("Invalid argument for integer deserialization");
+    return etched::err(RuntimeError{"Invalid argument for integer deserialization"});
   }
   if (ec == std::errc::result_out_of_range) {
-    return err<T>("Integer deserialization out of range");
+    return etched::err(RuntimeError{"Integer deserialization out of range"});
   }
   if (ptr != str.data() + str.size()) {
-    return err<T>("Extra characters found after integer deserialization");
+    return etched::err(RuntimeError{"Extra characters found after integer deserialization"});
   }
-  return ok(value);
+  return value;
 }
 
 // Boolean deserialization
 [[nodiscard]] inline auto deserialize(std::string_view str,
                                       [[maybe_unused]] bool* dummy)
-    -> Result<bool> {
+    -> Expected<bool, RuntimeError> {
   if (str == "true" || str == "1" || str == "ON") {
-    return ok(true);
+    return true;
   }
   if (str == "false" || str == "0" || str == "OFF") {
-    return ok(false);
+    return false;
   }
-  return err<bool>("Invalid argument for boolean deserialization");
+  return etched::err(RuntimeError{"Invalid argument for boolean deserialization"});
 }
 
 // Floating-point deserialization
 template <std::floating_point T>
 [[nodiscard]] auto deserialize(std::string_view str, [[maybe_unused]] T* dummy)
-    -> Result<T> {
+    -> Expected<T, RuntimeError> {
   T value;
   auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), value);
   if (ec == std::errc::invalid_argument) {
-    return err<T>("Invalid argument for floating-point deserialization");
+    return etched::err(RuntimeError{"Invalid argument for floating-point deserialization"});
   }
   if (ec == std::errc::result_out_of_range) {
-    return err<T>("Floating-point deserialization out of range");
+    return etched::err(RuntimeError{"Floating-point deserialization out of range"});
   }
   if (ptr != str.data() + str.size()) {
-    return err<T>(
-        "Extra characters found after floating-point deserialization");
+    return etched::err(RuntimeError{
+        "Extra characters found after floating-point deserialization"});
   }
-  return ok(value);
+  return value;
 }
 
 // String deserialization
 [[nodiscard]] inline auto deserialize(std::string_view str,
                                       [[maybe_unused]] std::string* dummy)
-    -> Result<std::string> {
+    -> Expected<std::string, RuntimeError> {
   if (str.empty()) {
-    return err<std::string>("Cannot deserialize empty string");
+    return etched::err(RuntimeError{"Cannot deserialize empty string"});
   }
-  return ok(std::string(str));
+  return std::string(str);
 }
 
 [[nodiscard]] inline auto deserialize(std::string_view str,
                                       [[maybe_unused]] std::string_view* dummy)
-    -> Result<std::string_view> {
+    -> Expected<std::string_view, RuntimeError> {
   if (str.empty()) {
-    return err<std::string_view>("Cannot deserialize empty string_view");
+    return etched::err(RuntimeError{"Cannot deserialize empty string_view"});
   }
-  return ok(str);
+  return str;
 }
 
 }  // namespace etched

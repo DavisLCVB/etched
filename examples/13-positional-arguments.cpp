@@ -11,12 +11,12 @@ auto main(int argc, const char* argv[]) -> int {
 
   auto result = parser.parse(argc, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     return 1;
   }
 
-  bool verbose = parser.get<"verbose">().valueOr(false);
+  bool verbose = parser.get<"verbose">().value_or(false);
   const auto& files = parser.get<"positional">();
 
   if (files.empty()) {

@@ -34,9 +34,9 @@ class ArgumentParser {
                        opts...) {}
 
   [[nodiscard]] auto parse(const int argc, const char* argv[])  //NOLINT
-      -> Result<Output> {                                       // NOLINT
+      -> Expected<Output, RuntimeError> {                       // NOLINT
     if (argc > static_cast<int>(Conf::maxArgs)) {
-      return err<Output>("Exceeded maximum number of arguments");
+      return etched::err(RuntimeError{"Exceeded maximum number of arguments"});
     }
     return orchestrator_.parse(argc, argv);
   }

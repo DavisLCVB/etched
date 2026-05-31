@@ -10,9 +10,9 @@ inline void testCallback() {
   callbackCounter++;
 }
 
-inline auto testCallbackWithResult() -> Result<Output> {
+inline auto testCallbackWithResult() -> Expected<Output, RuntimeError> {
   callbackCounter += 10;
-  return ok(Output{.success = true, .shouldExit = false});
+  return Output{.success = true, .shouldExit = false};
 }
 
 inline void callbackBasicTest() {
@@ -25,8 +25,8 @@ inline void callbackBasicTest() {
   const char* argv[] = {"prog", "-a", "-v", "42"};
   auto result = parser.parse(4, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Callback parsing should succeed";
   }
 
@@ -50,8 +50,8 @@ inline void callbackMultipleTest() {
   const char* argv[] = {"prog", "-i", "-a", "-i"};
   auto result = parser.parse(4, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Multiple callbacks should succeed";
   }
 
@@ -61,8 +61,8 @@ inline void callbackMultipleTest() {
   }
 }
 
-inline auto testCallbackExit() -> Result<Output> {
-  return ok(Output{.success = true, .shouldExit = true});
+inline auto testCallbackExit() -> Expected<Output, RuntimeError> {
+  return Output{.success = true, .shouldExit = true};
 }
 
 inline void callbackExitTest() {
@@ -72,11 +72,11 @@ inline void callbackExitTest() {
   const char* argv[] = {"prog", "-e"};
   auto result = parser.parse(2, argv);
 
-  if (!result.isOk()) {
+  if (!result.has_value()) {
     throw "Exit callback parsing should succeed";
   }
 
-  if (!result.unwrap().shouldExit) {
+  if (!result.value().shouldExit) {
     throw "shouldExit should be true";
   }
 }

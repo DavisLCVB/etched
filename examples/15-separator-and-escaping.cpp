@@ -11,12 +11,12 @@ auto main(int argc, const char* argv[]) -> int {
 
   auto result = parser.parse(argc, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     return 1;
   }
 
-  if (parser.get<"all">().valueOr(false)) {
+  if (parser.get<"all">().value_or(false)) {
     std::cout << "Option --all is active\n";
   }
 

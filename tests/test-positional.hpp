@@ -13,8 +13,8 @@ inline void positionalArgumentBasicTest() {
   const char* argv[] = {"prog", "file1.txt", "file2.txt", "file3.txt"};
   auto result = parser.parse(4, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Positional parsing failed";
   }
 
@@ -35,8 +35,8 @@ inline void positionalIntTest() {
   const char* argv[] = {"prog", "10", "20", "30"};
   auto result = parser.parse(4, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Positional int parsing failed";
   }
 
@@ -56,8 +56,8 @@ inline void positionalEmptyTest() {
   const char* argv[] = {"prog"};
   auto result = parser.parse(1, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Positional empty parsing failed";
   }
 

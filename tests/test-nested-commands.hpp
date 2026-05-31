@@ -17,8 +17,8 @@ inline void nestedCommandsGitStyleTest() {
   const char* argv[] = {"git", "remote", "add", "--name", "origin", "-u", "https://github.com/user/repo.git"};
   auto result = parser.parse(7, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Nested command parsing failed";
   }
 
@@ -50,8 +50,8 @@ inline void nestedCommandsScopeTest() {
   // global should take default 1.
   
   auto result = parser.parse(5, argv);
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Scope test parsing failed";
   }
 

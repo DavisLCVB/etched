@@ -27,11 +27,11 @@ inline void testNoClusters() {
 
   const char* argv[] = {"prog", "-ab"};
   auto result = parser.parse(2, argv);
-  if (result.isOk()) {
+  if (result.has_value()) {
     throw "Should have failed for clustered options";
   }
   // Optional: check error message
-  // if (result.unwrapErr().message() != std::string_view("Clustered short options are not allowed")) ...
+  // if (result.error().message() != std::string_view("Clustered short options are not allowed")) ...
 }
 
 // 2. Test LexerConfig::prefferValues = true
@@ -56,7 +56,7 @@ inline void testPrefferValues() {
   const char* argv[] = {"prog", "-v", "-x"};
   auto result = parser.parse(3, argv);
 
-  if (!result.isOk())
+  if (!result.has_value())
     throw "PrefferValues failed";
   auto val = parser.get<"val">();
   if (!val.has_value() || val.value() != "-x")
@@ -85,7 +85,7 @@ inline void testTinySymbolTable() {
   const char* argv[] = {"prog", "--longname"};
   auto result = parser.parse(2, argv);
   // It should fail because "longname" was truncated to "lon" in the symbol table
-  if (result.isOk())
+  if (result.has_value())
     throw "Should have failed to find --longname due to truncation";
 }
 

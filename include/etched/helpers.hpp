@@ -228,7 +228,7 @@ template <detail::String Tag, typename T = double>
  * @brief Defines an option that triggers a callback when encountered.
  * 
  * @tparam Tag Unique identifier.
- * @tparam CallbackType A callable object. Can return void or Result<Output>.
+ * @tparam CallbackType A callable object. Can return void or Expected<Output, RuntimeError>.
  * @param shortName Short flag.
  * @param longName Long flag.
  * @param description Help text.
@@ -261,7 +261,7 @@ template <detail::String Tag, typename CallbackType>
 [[nodiscard]] consteval auto optHelp(char shortName,
                                      std::string_view longName) {
   return optCallback<"help">(shortName, longName, "Show help", []() -> auto {
-    return ok(Output{.success = true, .shouldExit = true});
+    return Output{.success = true, .shouldExit = true};
   });
 }
 

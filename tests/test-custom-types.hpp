@@ -21,36 +21,36 @@ struct Color {
 namespace etched {
 
 template <>
-inline auto deserialize(std::string_view str, tests::Point*) -> Result<tests::Point> {
+inline auto deserialize(std::string_view str, tests::Point*) -> Expected<tests::Point, RuntimeError> {
   auto comma = str.find(',');
   if (comma == std::string_view::npos) {
-    return err<tests::Point>("Point format: x,y");
+    return etched::err(RuntimeError{"Point format: x,y"});
   }
   auto xStr = str.substr(0, comma);
   auto yStr = str.substr(comma + 1);
 
   double x = 0, y = 0;
   auto xResult = deserialize(xStr, static_cast<double*>(nullptr));
-  if (!xResult.isOk()) return err<tests::Point>("Invalid x coordinate");
-  x = xResult.unwrap();
+  if (!xResult.has_value()) return etched::err(RuntimeError{"Invalid x coordinate"});
+  x = xResult.value();
 
   auto yResult = deserialize(yStr, static_cast<double*>(nullptr));
-  if (!yResult.isOk()) return err<tests::Point>("Invalid y coordinate");
-  y = yResult.unwrap();
+  if (!yResult.has_value()) return etched::err(RuntimeError{"Invalid y coordinate"});
+  y = yResult.value();
 
-  return ok(tests::Point{x, y});
+  return tests::Point{x, y};
 }
 
 template <>
-inline auto deserialize(std::string_view str, tests::Color*) -> Result<tests::Color> {
+inline auto deserialize(std::string_view str, tests::Color*) -> Expected<tests::Color, RuntimeError> {
   if (str.empty()) {
-    return err<tests::Color>("Empty color string");
+    return etched::err(RuntimeError{"Empty color string"});
   }
   if (str[0] == '#') {
     str = str.substr(1);
   }
   if (str.size() != 6) {
-    return err<tests::Color>("Color format: #RRGGBB or RRGGBB");
+    return etched::err(RuntimeError{"Color format: #RRGGBB or RRGGBB"});
   }
 
   auto parseHex = [](std::string_view hex) -> uint8_t {
@@ -64,10 +64,10 @@ inline auto deserialize(std::string_view str, tests::Color*) -> Result<tests::Co
     return result;
   };
 
-  return ok(tests::Color{
+  return tests::Color{
       parseHex(str.substr(0, 2)),
       parseHex(str.substr(2, 2)),
-      parseHex(str.substr(4, 2))});
+      parseHex(str.substr(4, 2))};
 }
 
 }  // namespace etched
@@ -81,8 +81,8 @@ inline void customTypePointTest() {
   const char* argv[] = {"prog", "-p", "10.5,20.3"};
   auto result = parser.parse(3, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Point parsing should succeed";
   }
 
@@ -102,8 +102,8 @@ inline void customTypeColorTest() {
   const char* argv[] = {"prog", "-c", "#FF5733"};
   auto result = parser.parse(3, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Color parsing should succeed";
   }
 
@@ -121,7 +121,7 @@ inline void customTypeDefaultValueTest() {
   const char* argv[] = {"prog"};
   auto result = parser.parse(1, argv);
 
-  if (!result.isOk()) {
+  if (!result.has_value()) {
     throw "Default value parsing should succeed";
   }
 
@@ -140,8 +140,8 @@ inline void customTypeCombinedTest() {
   const char* argv[] = {"prog", "-p", "5,5", "-c", "00FF00", "-s", "20"};
   auto result = parser.parse(7, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Combined custom types should succeed";
   }
 

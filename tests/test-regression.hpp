@@ -15,8 +15,8 @@ inline void optionValueNotPositionalTest() {
   const char* argv[] = {"prog", "-o", "out.txt", "in.txt"};
   auto result = parser.parse(4, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Regression test failed";
   }
 
@@ -37,8 +37,8 @@ inline void shortOptionJoinedValueTest() {
   const char* argv[] = {"prog", "-p9000"};
   auto result = parser.parse(2, argv);
 
-  if (!result.isOk()) {
-    result.unwrapErr().print();
+  if (!result.has_value()) {
+    result.error().print();
     throw "Short option with joined value failed to parse";
   }
 
