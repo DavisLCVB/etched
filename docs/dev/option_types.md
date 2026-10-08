@@ -140,9 +140,10 @@ Rules:
   Its name follows the long-name rules.
 - Tokens before the subcommand belong to the parent. Tokens after it belong to
   the subcommand.
-- A parent option after the subcommand is an error unless that option is
-  declared global: `app build --verbose` is valid only if `--verbose` is a
-  global option of `app`.
+- A parent option after the subcommand is an error: `app build --verbose`
+  fails when `--verbose` is declared by `app`. Global options that are
+  accepted after a subcommand are deferred
+  ([ADR 0011](../adr/0011-tokens-after-subcommand.md)).
 - A command with subcommands cannot declare positionals. This removes the
   ambiguity between a subcommand name and a positional value.
 - An unknown value where a subcommand is expected is an error
@@ -161,7 +162,7 @@ Rules:
 | Missing required positional                 | `app` with `<input>`       |
 | Unexpected extra positional                 | `app a b` with one `<input>` |
 | Unknown subcommand                          | `app biuld`                |
-| Parent option after subcommand (not global) | `app build --config x`     |
+| Parent option after subcommand              | `app build --config x`     |
 
 ## Related Decisions
 
@@ -170,9 +171,6 @@ Rules:
   separate values.
 - [ADR 0004](../adr/0004-interleaved-positionals.md): interleaved options and
   positionals.
-- [ADR 0005](../adr/0005-global-options.md): global options.
-
-## Open Decisions
-
-1. Global options: may they appear both before and after the subcommand, or
-   only after it?
+- [ADR 0005](../adr/0005-global-options.md): global options (deferred).
+- [ADR 0011](../adr/0011-tokens-after-subcommand.md): tokens after a
+  subcommand belong to the subcommand.
