@@ -1,6 +1,5 @@
 # 0005. Global options
 
-- Status: Deferred by [0011](0011-tokens-after-subcommand.md)
 - Date: 2026-10-08
 
 ## Context

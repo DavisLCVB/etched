@@ -1,6 +1,5 @@
 # 0011. Tokens after a subcommand belong to the subcommand
 
-- Status: Accepted
 - Date: 2026-10-08
 
 ## Context

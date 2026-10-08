@@ -1,6 +1,5 @@
 # 0004. Interleaved options and positionals
 
-- Status: Accepted
 - Date: 2026-10-08
 
 ## Context

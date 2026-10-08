@@ -1,6 +1,5 @@
 # 0007. Default values are runtime values
 
-- Status: Accepted
 - Date: 2026-10-08
 
 ## Context

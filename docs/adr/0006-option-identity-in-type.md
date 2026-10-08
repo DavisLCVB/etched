@@ -1,6 +1,5 @@
 # 0006. Option identity and traits in the type, values in the object
 
-- Status: Accepted
 - Date: 2026-10-08
 
 ## Context

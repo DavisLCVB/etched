@@ -1,6 +1,5 @@
 # 0003. Negative numbers as separate values
 
-- Status: Accepted
 - Date: 2026-10-08
 
 ## Context

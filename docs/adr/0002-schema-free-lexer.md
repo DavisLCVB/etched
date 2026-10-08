@@ -1,6 +1,5 @@
 # 0002. Schema-free lexer
 
-- Status: Accepted
 - Date: 2026-10-08
 
 ## Context

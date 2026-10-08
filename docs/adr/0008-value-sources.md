@@ -1,6 +1,5 @@
 # 0008. Value sources and precedence
 
-- Status: Proposed
 - Date: 2026-10-08
 
 ## Context

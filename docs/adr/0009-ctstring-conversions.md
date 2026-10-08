@@ -1,6 +1,5 @@
 # 0009. CTString conversions
 
-- Status: Accepted
 - Date: 2026-10-08
 
 ## Context

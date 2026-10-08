@@ -1,6 +1,5 @@
 # 0010. Repetition policies
 
-- Status: Accepted
 - Date: 2026-10-08
 
 ## Context
