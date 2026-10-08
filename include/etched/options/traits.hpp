@@ -31,27 +31,19 @@ struct RequiredValueSelector<OptionType::FLAG> {
   static constexpr bool requiresValue = false;
 };
 
-// Holds only compile-time properties. It must not declare data members:
-// members of a base class cannot be set with designated initializers.
 template <OptionType Type>
 struct BasicTraits {
   static constexpr bool requiresValue{
       RequiredValueSelector<Type>::requiresValue};
 };
 
-// Repetition policies are split by option kind so that invalid combinations
-// cannot be expressed: COUNT only exists for flags, ACCUMULATE only for
-// options. The shared values keep the same meaning in both enums.
 enum class OptionRepetition : uint8_t {
   THROW_ERROR = 0,
   TAKE_FIRST = 1 << 0,
   TAKE_LAST = 1 << 1,
-  // Appends each occurrence to the value. Only valid when the value type is a
-  // container; each element is deserialized on its own.
   ACCUMULATE = 1 << 2
 };
 
-// A negated occurrence (--no-NAME) counts as an occurrence of the same flag.
 enum class FlagRepetition : uint8_t {
   THROW_ERROR = 0,
   TAKE_FIRST = 1 << 0,
