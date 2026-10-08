@@ -20,6 +20,10 @@ the value of the preceding option when:
 For every other value type, values that start with `-` must use the attached
 form (`--name=-x`, `-n-x`).
 
+This behavior is enabled by default and can be disabled with
+`OptionsConfig::allowNegativeNumbers`. When disabled, negative numbers must
+use the attached form, as any other value that starts with `-`.
+
 ## Consequences
 
 - The decision depends on the value type, so it is taken by the parser, not by

@@ -64,7 +64,8 @@ Rules:
 - Exception, negative numbers: when the option's value type is numeric, a
   separate token that is a valid negative number (`-5`, `-0.25`) is consumed
   as the value, unless it matches a declared short option of the current
-  scope. Example: `--offset -5` is valid for an integer `--offset`.
+  scope. Example: `--offset -5` is valid for an integer `--offset`. Enabled
+  by default; it can be disabled with `OptionsConfig::allowNegativeNumbers`.
 - `--output=` sets an explicit empty value.
 - `-o=VALUE` gives the value `=VALUE` (attached-form rule); it is not a
   special case.
