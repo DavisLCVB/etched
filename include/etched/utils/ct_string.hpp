@@ -50,6 +50,13 @@ struct CTString {
 
   [[nodiscard]] constexpr operator std::string_view() const { return view(); }
 
+#ifdef ETCHED_CTSTRING_IMPLICIT_CSTR
+  // Compatibility opt-in for code that relied on the implicit pointer
+  // conversion. It makes calls overloaded on std::string_view and
+  // const char* ambiguous, and allows silent conversions to bool.
+  [[nodiscard]] constexpr operator const char*() const { return c_str(); }
+#endif
+
   [[nodiscard]] constexpr auto c_str() const -> const char* {  // NOLINT
     return data.data();
   }
