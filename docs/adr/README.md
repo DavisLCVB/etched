@@ -17,3 +17,4 @@ Statuses: `Proposed`, `Accepted`, `Superseded by NNNN`, `Deprecated`.
 | [0007](0007-runtime-default-values.md) | Default values are runtime values | Accepted |
 | [0008](0008-value-sources.md) | Value sources and precedence | Proposed |
 | [0009](0009-ctstring-conversions.md) | CTString conversions | Accepted |
+| [0010](0010-repetition-policies.md) | Repetition policies | Accepted |

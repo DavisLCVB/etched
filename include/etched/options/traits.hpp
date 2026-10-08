@@ -39,25 +39,35 @@ struct BasicTraits {
       RequiredValueSelector<Type>::requiresValue};
 };
 
-enum class RepetitionPolicy : uint8_t {
+// Repetition policies are split by option kind so that invalid combinations
+// cannot be expressed: COUNT only exists for flags, ACCUMULATE only for
+// options. The shared values keep the same meaning in both enums.
+enum class OptionRepetition : uint8_t {
   THROW_ERROR = 0,
   TAKE_FIRST = 1 << 0,
   TAKE_LAST = 1 << 1,
-  COUNT = 1 << 2,
   // Appends each occurrence to the value. Only valid when the value type is a
   // container; each element is deserialized on its own.
-  ACCUMULATE = 1 << 3
+  ACCUMULATE = 1 << 2
+};
+
+// A negated occurrence (--no-NAME) counts as an occurrence of the same flag.
+enum class FlagRepetition : uint8_t {
+  THROW_ERROR = 0,
+  TAKE_FIRST = 1 << 0,
+  TAKE_LAST = 1 << 1,
+  COUNT = 1 << 2
 };
 
 struct OptionTraits : public BasicTraits<OptionType::OPTION> {
   bool isRequired{false};
-  RepetitionPolicy repetitionPolicy{RepetitionPolicy::THROW_ERROR};
+  OptionRepetition repetitionPolicy{OptionRepetition::THROW_ERROR};
 };
 
 struct FlagTraits : public BasicTraits<OptionType::FLAG> {
   bool isRequired{false};
   bool hasNegativeForm{false};
-  RepetitionPolicy repetitionPolicy{RepetitionPolicy::THROW_ERROR};
+  FlagRepetition repetitionPolicy{FlagRepetition::THROW_ERROR};
 };
 
 enum class PositionalPolicy : uint8_t {

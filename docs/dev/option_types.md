@@ -105,8 +105,10 @@ Rules:
 - Repeating a flag follows its repetition policy. The default is an error:
   `-v -v` fails. The policy can be changed to accept repetitions, or to count
   them (`-vvv`).
-- `--no-NAME` exists only when the flag is declared negatable. The last
-  occurrence wins: `--verbose --no-verbose` results in `false`.
+- `--no-NAME` exists only when the flag is declared negatable. A negated
+  occurrence counts as an occurrence of the same flag and follows its
+  repetition policy: with the default, `--verbose --no-verbose` fails; when
+  the policy keeps the last occurrence, it results in `false`.
 
 ## Positional Option
 
