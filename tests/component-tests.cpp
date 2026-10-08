@@ -14,6 +14,7 @@
 #include "test-nested-commands.hpp"
 #include "test-positional.hpp"
 #include "test-regression.hpp"
+#include "test-static-optional.hpp"
 #include "test-symbol-table.hpp"
 
 auto main() -> int {
@@ -59,6 +60,9 @@ auto main() -> int {
 
     std::printf("\n=== Config Variation Tests ===\n");
     etched::tests::runConfigVariationTests();
+
+    std::printf("\n=== StaticOptional Tests ===\n");
+    etched::tests::runStaticOptionalTests();
 
     std::printf("\nAll component tests passed!\n");
     return 0;
