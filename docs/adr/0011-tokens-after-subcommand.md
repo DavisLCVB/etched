@@ -33,5 +33,5 @@ behavior, defaulting to `false`.
 - The parsing context does not need references to ancestor storage.
 - Programs that want an option on every level must declare it in each
   subcommand.
-- `allowUnorderedGlobalOption` and the `isGlobal` trait have no effect while
-  the feature is deferred.
+- `OptionsConfig::allowUnorderedGlobalOption` is removed, and the `isGlobal`
+  trait is not added, until the feature is revisited.

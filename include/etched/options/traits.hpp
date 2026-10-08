@@ -12,7 +12,6 @@ struct OptionsConfig {
   bool allowShortJoinedValue{true};
   bool allowLongJoinedValue{true};
   bool allowFlagClustering{true};
-  bool allowUnorderedGlobalOption{false};
 };
 
 enum class OptionType : uint8_t {
