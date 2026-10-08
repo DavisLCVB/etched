@@ -151,13 +151,14 @@ Rules:
 | Unknown subcommand                          | `app biuld`                |
 | Parent option after subcommand (not global) | `app build --config x`     |
 
-## Resolved Decisions
+## Related Decisions
 
-- Negative numbers as separate values are accepted only for numeric value
-  types (see [Basic Option](#basic-option)). This is resolved in the parser,
-  so the lexer stays schema-free.
-- Options and positionals may always be interleaved (GNU style). There is no
-  strict POSIX mode in v3; pass-through use cases rely on `--`.
+- [ADR 0002](../adr/0002-schema-free-lexer.md): schema-free lexer.
+- [ADR 0003](../adr/0003-negative-numbers-as-values.md): negative numbers as
+  separate values.
+- [ADR 0004](../adr/0004-interleaved-positionals.md): interleaved options and
+  positionals.
+- [ADR 0005](../adr/0005-global-options.md): global options.
 
 ## Open Decisions
 
