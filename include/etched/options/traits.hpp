@@ -10,7 +10,7 @@ namespace etched::options {
 struct OptionsConfig {
   bool allowNegativeNumbers{false};
   bool allowShortJoinedValue{true};
-  bool allowLongJoinedValue{false};
+  bool allowLongJoinedValue{true};
   bool allowFlagClustering{true};
   bool allowUnorderedGlobalOption{false};
 };
