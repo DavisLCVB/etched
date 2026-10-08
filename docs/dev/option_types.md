@@ -69,9 +69,16 @@ Rules:
 - `--output=` sets an explicit empty value.
 - `-o=VALUE` gives the value `=VALUE` (attached-form rule); it is not a
   special case.
-- Repeated occurrences: behavior is defined by the declaration (last-wins or
-  accumulate). The syntax is always one value per occurrence:
-  `-I a -I b`. Comma-separated lists are not split by the parser.
+- Repeated occurrences follow the option's repetition policy. The default is
+  an error: `--port 80 --port 8080` fails. The policy can be changed to keep
+  the first occurrence, keep the last one, or accumulate every occurrence.
+- Accumulation is only valid when the value type is a container, such as
+  `std::vector<std::string>`. Each occurrence is deserialized as one element
+  and appended: `-I a -I b` gives `{"a", "b"}`. Declaring accumulation with a
+  non-container value type is a compile-time error.
+- The syntax is always one value per occurrence. Comma-separated lists are not
+  split by the parser; a custom deserializer may parse one token into a
+  container instead.
 
 ## Flag Option
 
@@ -95,7 +102,9 @@ Rules:
   token: `-xzf archive.tar` and `-xzfarchive.tar` are both valid.
 - A basic option in the middle of a group consumes the rest of the group as
   its value: `-fxz` means `-f xz` when `-f` takes a value.
-- Repeating a non-counting flag is not an error; it is idempotent.
+- Repeating a flag follows its repetition policy. The default is an error:
+  `-v -v` fails. The policy can be changed to accept repetitions, or to count
+  them (`-vvv`).
 - `--no-NAME` exists only when the flag is declared negatable. The last
   occurrence wins: `--verbose --no-verbose` results in `false`.
 

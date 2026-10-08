@@ -43,7 +43,10 @@ enum class RepetitionPolicy : uint8_t {
   THROW_ERROR = 0,
   TAKE_FIRST = 1 << 0,
   TAKE_LAST = 1 << 1,
-  COUNT = 1 << 2
+  COUNT = 1 << 2,
+  // Appends each occurrence to the value. Only valid when the value type is a
+  // container; each element is deserialized on its own.
+  ACCUMULATE = 1 << 3
 };
 
 struct OptionTraits : public BasicTraits<OptionType::OPTION> {
