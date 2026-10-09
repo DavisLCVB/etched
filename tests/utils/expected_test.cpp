@@ -18,11 +18,7 @@ using etched::Unexpected;
 
 using Result = Expected<int, std::string>;
 
-#if defined(HAS_STD_EXPECTED)
-using BadValueAccess = std::bad_expected_access<std::string>;
-#else
-using BadValueAccess = std::bad_variant_access;
-#endif
+using BadValueAccess = etched::BadExpectedAccess<std::string>;
 
 // --- Construction and observers ---
 
@@ -47,6 +43,43 @@ TEST(ExpectedTest, BuildsErrorWithErrHelper) {
   EXPECT_EQ(result.error(), "invalid");
 }
 
+TEST(ExpectedTest, ErrHelperDecaysStringLiterals) {
+  auto unexpected = err("invalid");
+  static_assert(std::is_same_v<decltype(unexpected), Unexpected<const char*>>);
+
+  Result result = err("invalid");
+  ASSERT_FALSE(result.has_value());
+  EXPECT_EQ(result.error(), "invalid");
+}
+
+TEST(ExpectedTest, ConvertsUnexpectedOfAnotherErrorType) {
+  const Unexpected<const char*> lvalue{"from lvalue"};
+  Result fromLvalue = lvalue;
+  EXPECT_EQ(fromLvalue.error(), "from lvalue");
+
+  Result fromRvalue = Unexpected<const char*>{"from rvalue"};
+  EXPECT_EQ(fromRvalue.error(), "from rvalue");
+
+  Expected<void, std::string> voidResult = err("void");
+  EXPECT_EQ(voidResult.error(), "void");
+}
+
+TEST(ExpectedTest, ConversionIsExplicitWhenErrorIsOnlyConstructible) {
+  struct Explicit {
+    explicit Explicit(int code) : value(code) {}
+
+    int value;
+  };
+
+  static_assert(
+      !std::is_convertible_v<Unexpected<int>, Expected<int, Explicit>>);
+  static_assert(
+      std::is_constructible_v<Expected<int, Explicit>, Unexpected<int>>);
+
+  Expected<int, Explicit> result{Unexpected<int>{4}};
+  EXPECT_EQ(result.error().value, 4);
+}
+
 TEST(ExpectedTest, ErrHelperDeducesErrorTypeFromLvalue) {
   const std::string message = "invalid";
   auto unexpected = err(message);
@@ -68,6 +101,22 @@ TEST(ExpectedTest, ValueOnErrorThrows) {
   EXPECT_THROW((void)result.value(), BadValueAccess);
   EXPECT_THROW((void)constResult.value(), BadValueAccess);
   EXPECT_THROW((void)std::move(result).value(), BadValueAccess);
+}
+
+TEST(ExpectedTest, ValueExceptionCarriesError) {
+  Result result{Unexpected<std::string>{"invalid"}};
+  try {
+    (void)result.value();
+    FAIL() << "value() should throw";
+  } catch (const BadValueAccess& exception) {
+    EXPECT_EQ(exception.error(), "invalid");
+  }
+}
+
+TEST(ExpectedTest, ValueExceptionSharesBaseClasses) {
+  Result result{Unexpected<std::string>{"invalid"}};
+  EXPECT_THROW((void)result.value(), etched::BadExpectedAccess<void>);
+  EXPECT_THROW((void)result.value(), std::exception);
 }
 
 TEST(ExpectedTest, ValueReturnsMutableReference) {
