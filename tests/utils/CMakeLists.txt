@@ -21,3 +21,32 @@ target_compile_options(utils_tests PRIVATE
 )
 target_link_libraries(utils_tests PRIVATE etched::etched GTest::gtest_main)
 gtest_discover_tests(utils_tests)
+
+# Compile-fail tests: each source must fail to build, and the build output
+# must contain the expected diagnostic so that unrelated errors do not pass.
+function(etched_add_compile_fail_test name source expected_message)
+  add_executable(${name} ${source})
+  target_link_libraries(${name} PRIVATE etched::etched)
+  set_target_properties(${name} PROPERTIES
+    EXCLUDE_FROM_ALL TRUE
+    EXCLUDE_FROM_DEFAULT_BUILD TRUE
+  )
+  add_test(
+    NAME ${name}
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ${name}
+            --config $<CONFIGURATION>
+  )
+  set_tests_properties(${name} PROPERTIES
+    PASS_REGULAR_EXPRESSION "${expected_message}"
+  )
+endfunction()
+
+etched_add_compile_fail_test(ct_string_unterminated_array
+  compile_fail/ct_string_unterminated_array.cpp
+  "array is not null-terminated")
+etched_add_compile_fail_test(ct_string_empty_array
+  compile_fail/ct_string_empty_array.cpp
+  "array is not null-terminated")
+etched_add_compile_fail_test(ct_string_substr_out_of_bounds
+  compile_fail/ct_string_substr_out_of_bounds.cpp
+  "CTString::substr out of bounds")
