@@ -8,3 +8,5 @@ target_compile_options(component_tests PRIVATE
 )
 target_link_libraries(component_tests PRIVATE etched::etched)
 add_test(NAME component_tests COMMAND component_tests)
+
+add_subdirectory(utils)
