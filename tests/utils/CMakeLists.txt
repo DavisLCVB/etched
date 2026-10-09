@@ -11,16 +11,33 @@ FetchContent_MakeAvailable(googletest)
 
 include(GoogleTest)
 
-add_executable(utils_tests
-  ct_string_test.cpp
-)
-target_compile_options(utils_tests PRIVATE
+set(ETCHED_UTILS_TEST_WARNINGS
   -Wall -Wextra -Wpedantic -Wshadow -Wconversion
   -Wold-style-cast -Wnon-virtual-dtor -Wunused
   -Woverloaded-virtual
 )
+
+add_executable(utils_tests
+  ct_string_test.cpp
+  expected_test.cpp
+)
+target_compile_options(utils_tests PRIVATE ${ETCHED_UTILS_TEST_WARNINGS})
 target_link_libraries(utils_tests PRIVATE etched::etched GTest::gtest_main)
 gtest_discover_tests(utils_tests)
+
+# Expected aliases std::expected when the standard library provides it
+# (C++23). Build its tests a second time as C++23 to cover that path.
+if("cxx_std_23" IN_LIST CMAKE_CXX_COMPILE_FEATURES)
+  add_executable(utils_tests_cxx23
+    expected_test.cpp
+  )
+  target_compile_features(utils_tests_cxx23 PRIVATE cxx_std_23)
+  target_compile_options(utils_tests_cxx23 PRIVATE
+    ${ETCHED_UTILS_TEST_WARNINGS})
+  target_link_libraries(utils_tests_cxx23 PRIVATE
+    etched::etched GTest::gtest_main)
+  gtest_discover_tests(utils_tests_cxx23 TEST_PREFIX "cxx23.")
+endif()
 
 # Compile-fail tests: each source must fail to build, and the build output
 # must contain the expected diagnostic so that unrelated errors do not pass.
