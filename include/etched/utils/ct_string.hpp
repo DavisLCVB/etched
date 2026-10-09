@@ -1,9 +1,10 @@
-#ifndef ETCHED_UTILS_STRING_HPP
-#define ETCHED_UTILS_STRING_HPP
+#ifndef ETCHED_UTILS_CT_STRING_HPP
+#define ETCHED_UTILS_CT_STRING_HPP
 
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <stdexcept>
 #include <string_view>
 
 namespace etched::detail {
@@ -16,7 +17,11 @@ struct CTString {
     std::copy_n(str, N, data.begin());        // NOLINT
   }
 
+  // The array must be null-terminated: size() and c_str() rely on it.
   consteval CTString(const std::array<char, N>& arr) {  // NOLINT
+    if (N == 0 || arr[N - 1] != '\0') {
+      throw std::invalid_argument("CTString: array is not null-terminated");
+    }
     std::copy_n(arr.begin(), N, data.begin());
   }
 
@@ -44,7 +49,17 @@ struct CTString {
   }
 
   [[nodiscard]] constexpr operator std::string_view() const { return view(); }
-  [[nodiscard]] constexpr operator const char*() const { return data.data(); }
+
+#ifdef ETCHED_CTSTRING_IMPLICIT_CSTR
+  // Compatibility opt-in for code that relied on the implicit pointer
+  // conversion. It makes calls overloaded on std::string_view and
+  // const char* ambiguous, and allows silent conversions to bool.
+  [[nodiscard]] constexpr operator const char*() const { return c_str(); }
+#endif
+
+  [[nodiscard]] constexpr auto c_str() const -> const char* {  // NOLINT
+    return data.data();
+  }
 
   // --- Comparison ---
 
@@ -167,4 +182,4 @@ template <CTString S, char Prefix>
 
 }  // namespace etched::detail
 
-#endif  // ETCHED_UTILS_STRING_HPP
+#endif  // ETCHED_UTILS_CT_STRING_HPP
