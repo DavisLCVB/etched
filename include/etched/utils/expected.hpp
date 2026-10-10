@@ -4,13 +4,13 @@
 
 #include <version>
 
-#ifndef HAS_STD_EXPECTED
+#ifndef ETCHED_HAS_STD_EXPECTED
 #if defined(__cpp_lib_expected) && __cpp_lib_expected >= 202211L
-#define HAS_STD_EXPECTED 1
+#define ETCHED_HAS_STD_EXPECTED 1
 #endif
-#endif  // HAS_STD_EXPECT
+#endif  // ETCHED_HAS_STD_EXPECTED
 
-#if defined(HAS_STD_EXPECTED)
+#if defined(ETCHED_HAS_STD_EXPECTED)
 #include <expected>
 
 namespace etched {
@@ -21,17 +21,51 @@ template <typename E>
 using Unexpected = std::unexpected<E>;
 
 template <typename E>
-[[nodiscard]] auto err(E&& error) {
+using BadExpectedAccess = std::bad_expected_access<E>;
+
+template <typename E>
+[[nodiscard]] constexpr auto err(E&& error) {
   return std::unexpected(std::forward<E>(error));
 }
 
 }  // namespace etched
 #else
 
+#include <concepts>
+#include <exception>
+#include <type_traits>
 #include <utility>
 #include <variant>
 
 namespace etched {
+
+// Mirrors std::bad_expected_access so that both implementations throw the
+// same exception hierarchy.
+template <typename E>
+class BadExpectedAccess;
+
+template <>
+class BadExpectedAccess<void> : public std::exception {
+ public:
+  [[nodiscard]] auto what() const noexcept -> const char* override {
+    return "bad access to Expected without expected value";
+  }
+};
+
+template <typename E>
+class BadExpectedAccess : public BadExpectedAccess<void> {
+ public:
+  explicit BadExpectedAccess(E error) : error_(std::move(error)) {}
+
+  [[nodiscard]] auto error() const& noexcept -> const E& { return error_; }
+
+  [[nodiscard]] auto error() & noexcept -> E& { return error_; }
+
+  [[nodiscard]] auto error() && noexcept -> E&& { return std::move(error_); }
+
+ private:
+  E error_;
+};
 
 template <typename E>
 class Unexpected {
@@ -50,6 +84,9 @@ class Unexpected {
   E error_;
 };
 
+template <typename E>
+Unexpected(E) -> Unexpected<E>;
+
 template <typename T, typename E>
 class Expected {
  public:
@@ -60,6 +97,19 @@ class Expected {
   constexpr Expected(const Unexpected<E>& error) : data_(error) {}
 
   constexpr Expected(Unexpected<E>&& error) : data_(std::move(error)) {}
+
+  // Converts an Unexpected of another error type, as std::expected does.
+  template <typename G>
+    requires(!std::same_as<G, E> && std::constructible_from<E, const G&>)
+  constexpr explicit(!std::convertible_to<const G&, E>)
+      Expected(const Unexpected<G>& error)  // NOLINT
+      : data_(Unexpected<E>(E(error.error()))) {}
+
+  template <typename G>
+    requires(!std::same_as<G, E> && std::constructible_from<E, G>)
+  constexpr explicit(!std::convertible_to<G, E>)
+      Expected(Unexpected<G>&& error)  // NOLINT
+      : data_(Unexpected<E>(E(std::move(error).error()))) {}
 
   constexpr Expected(const Expected&) = default;
   constexpr Expected(Expected&&) noexcept = default;
@@ -96,21 +146,21 @@ class Expected {
 
   [[nodiscard]] constexpr auto value() const& -> const T& {
     if (!has_value()) {
-      throw std::bad_variant_access();
+      throw BadExpectedAccess<E>(error());
     }
     return std::get<T>(data_);
   }
 
   [[nodiscard]] constexpr auto value() & -> T& {
     if (!has_value()) {
-      throw std::bad_variant_access();
+      throw BadExpectedAccess<E>(error());
     }
     return std::get<T>(data_);
   }
 
   [[nodiscard]] constexpr auto value() && -> T&& {
     if (!has_value()) {
-      throw std::bad_variant_access();
+      throw BadExpectedAccess<E>(error());
     }
     return std::get<T>(std::move(data_));
   }
@@ -162,6 +212,19 @@ class Expected<void, E> {
 
   constexpr Expected(Unexpected<E>&& error) : data_(std::move(error)) {}
 
+  // Converts an Unexpected of another error type, as std::expected does.
+  template <typename G>
+    requires(!std::same_as<G, E> && std::constructible_from<E, const G&>)
+  constexpr explicit(!std::convertible_to<const G&, E>)
+      Expected(const Unexpected<G>& error)  // NOLINT
+      : data_(Unexpected<E>(E(error.error()))) {}
+
+  template <typename G>
+    requires(!std::same_as<G, E> && std::constructible_from<E, G>)
+  constexpr explicit(!std::convertible_to<G, E>)
+      Expected(Unexpected<G>&& error)  // NOLINT
+      : data_(Unexpected<E>(E(std::move(error).error()))) {}
+
   constexpr Expected(const Expected&) = default;
   constexpr Expected(Expected&&) noexcept = default;
   constexpr auto operator=(const Expected&) -> Expected& = default;
@@ -177,7 +240,7 @@ class Expected<void, E> {
 
   constexpr void value() const {
     if (!has_value()) {
-      throw std::bad_variant_access();
+      throw BadExpectedAccess<E>(error());
     }
   }
 
@@ -207,8 +270,8 @@ class Expected<void, E> {
 };
 
 template <typename E>
-[[nodiscard]] auto err(E&& error) {
-  return Unexpected(std::forward<E>(error));
+[[nodiscard]] constexpr auto err(E&& error) {
+  return Unexpected<std::decay_t<E>>(std::forward<E>(error));
 }
 
 }  // namespace etched
