@@ -20,6 +20,7 @@ set(ETCHED_UTILS_TEST_WARNINGS
 add_executable(utils_tests
   ct_string_test.cpp
   expected_test.cpp
+  optional_test.cpp
 )
 target_compile_options(utils_tests PRIVATE ${ETCHED_UTILS_TEST_WARNINGS})
 target_link_libraries(utils_tests PRIVATE etched::etched GTest::gtest_main)
