@@ -8,7 +8,8 @@
 
 // This file is compiled twice: as C++20, where etched provides its own
 // Expected, and as C++23, where Expected aliases std::expected. Tests outside
-// the HAS_STD_EXPECTED blocks describe behavior both implementations share.
+// the ETCHED_HAS_STD_EXPECTED blocks describe behavior both implementations
+// share.
 
 namespace {
 
@@ -179,7 +180,7 @@ TEST(ExpectedTest, RvalueErrorMovesError) {
   EXPECT_EQ(error, "payload");
 }
 
-#if !defined(HAS_STD_EXPECTED)
+#if !defined(ETCHED_HAS_STD_EXPECTED)
 // std::expected leaves error() on a value undefined. The fallback
 // implementation throws instead.
 TEST(ExpectedFallbackTest, ErrorOnValueThrows) {
@@ -220,6 +221,10 @@ TEST(ExpectedTest, WorksInConstantExpressions) {
   static_assert(!withError.has_value());
   static_assert(withError.error() == 7);
   static_assert(withError.value_or(1) == 1);
+
+  constexpr Expected<int, int> fromErr = err(9);
+  static_assert(!fromErr.has_value());
+  static_assert(fromErr.error() == 9);
 }
 
 // --- Expected<void, E> ---

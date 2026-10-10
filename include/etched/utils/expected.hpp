@@ -4,13 +4,13 @@
 
 #include <version>
 
-#ifndef HAS_STD_EXPECTED
+#ifndef ETCHED_HAS_STD_EXPECTED
 #if defined(__cpp_lib_expected) && __cpp_lib_expected >= 202211L
-#define HAS_STD_EXPECTED 1
+#define ETCHED_HAS_STD_EXPECTED 1
 #endif
-#endif  // HAS_STD_EXPECT
+#endif  // ETCHED_HAS_STD_EXPECTED
 
-#if defined(HAS_STD_EXPECTED)
+#if defined(ETCHED_HAS_STD_EXPECTED)
 #include <expected>
 
 namespace etched {
@@ -24,7 +24,7 @@ template <typename E>
 using BadExpectedAccess = std::bad_expected_access<E>;
 
 template <typename E>
-[[nodiscard]] auto err(E&& error) {
+[[nodiscard]] constexpr auto err(E&& error) {
   return std::unexpected(std::forward<E>(error));
 }
 
@@ -270,7 +270,7 @@ class Expected<void, E> {
 };
 
 template <typename E>
-[[nodiscard]] auto err(E&& error) {
+[[nodiscard]] constexpr auto err(E&& error) {
   return Unexpected<std::decay_t<E>>(std::forward<E>(error));
 }
 
